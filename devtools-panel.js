@@ -91,6 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
             data: e.target.result,
             width: img.width,
             height: img.height,
+            displaySize: 'medium', // Default size
             timestamp: new Date().toISOString(),
           };
 
@@ -175,6 +176,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 isCurrent ? 'Current' : 'Select'
               }</button>
                 <button class="delete-btn" data-id="${image.id}">Delete</button>
+                <select class="size-dropdown" data-id="${image.id}">
+                  <option value="small" ${
+                    image.displaySize === 'small' ? 'selected' : ''
+                  }>Small</option>
+                  <option value="medium" ${
+                    image.displaySize === 'medium' ? 'selected' : ''
+                  }>Medium</option>
+                  <option value="large" ${
+                    image.displaySize === 'large' ? 'selected' : ''
+                  }>Large</option>
+                  <option value="x-large" ${
+                    image.displaySize === 'x-large' ? 'selected' : ''
+                  }>X-Large</option>
+                </select>
               </div>
             `;
             });
@@ -198,6 +213,27 @@ document.addEventListener('DOMContentLoaded', function () {
           updateImageList();
           uploadResult.textContent = 'Image selected successfully!';
           uploadResult.classList.remove('hidden');
+        });
+      });
+    });
+
+    // Size dropdown
+    document.querySelectorAll('.size-dropdown').forEach((dropdown) => {
+      dropdown.addEventListener('change', function () {
+        const imageId = this.getAttribute('data-id');
+        const newSize = this.value;
+
+        chrome.storage.local.get(['uploadedImages'], function (result) {
+          const images = result.uploadedImages || [];
+          const imageIndex = images.findIndex((img) => img.id === imageId);
+
+          if (imageIndex !== -1) {
+            images[imageIndex].displaySize = newSize;
+            chrome.storage.local.set({ uploadedImages: images }, function () {
+              uploadResult.textContent = `Image size updated to ${newSize}!`;
+              uploadResult.classList.remove('hidden');
+            });
+          }
         });
       });
     });

@@ -94,6 +94,10 @@ input[type='file'] {
   padding: 10px;
 }
 
+.image-item .image-details {
+  flex: 1;
+}
+
 .image-item.current {
   background: #e6fffa;
   border-color: #81e6d9;
@@ -129,6 +133,27 @@ input[type='file'] {
 .image-size {
   color: #6c757d;
   font-size: 10px;
+}
+
+.size-dropdown {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
+  color: #4a5568;
+  cursor: pointer;
+  font-size: 11px;
+  margin: 0 8px;
+  min-width: 74px;
+  padding: 4px 6px;
+}
+
+.size-dropdown:hover {
+  border-color: #cbd5e0;
+}
+
+.size-dropdown:focus {
+  border-color: #667eea;
+  outline: none;
 }
 
 .select-btn,
