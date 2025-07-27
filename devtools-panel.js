@@ -152,6 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ['uploadedImages', 'currentImageId'],
       function () {
         imagePreview.classList.add('hidden');
+        imageInfo.innerHTML = '';
         uploadResult.textContent = 'All images cleared successfully!';
         uploadResult.classList.remove('hidden');
 
@@ -245,6 +246,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateImageList();
                 uploadResult.textContent = 'Image deleted successfully!';
                 uploadResult.classList.remove('hidden');
+
+                // Hide image preview if no images remain
+                if (updatedImages.length === 0) {
+                  imagePreview.classList.add('hidden');
+                  imageInfo.innerHTML = '';
+                }
               }
             );
           }
