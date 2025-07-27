@@ -1,10 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   const getPageInfoBtn = document.getElementById('getPageInfo');
   const getStorageBtn = document.getElementById('getStorage');
-  const incrementActionBtn = document.getElementById('incrementAction');
-  const clearStorageBtn = document.getElementById('clearStorage');
   const pageInfoDiv = document.getElementById('pageInfo');
-  const actionResultDiv = document.getElementById('actionResult');
   const debugInfoDiv = document.getElementById('debugInfo');
 
   // Image uploader elements
@@ -48,36 +45,6 @@ document.addEventListener('DOMContentLoaded', function () {
         pageInfoDiv.textContent = 'No storage data found';
         pageInfoDiv.classList.remove('hidden');
       }
-    });
-  });
-
-  // Increment action count
-  incrementActionBtn.addEventListener('click', function () {
-    chrome.runtime.sendMessage(
-      { action: 'incrementAction' },
-      function (response) {
-        if (response && response.success) {
-          actionResultDiv.textContent = `Action count incremented! New count: ${response.newCount}`;
-          actionResultDiv.classList.remove('hidden');
-
-          debugInfoDiv.textContent = `Last action: ${new Date().toLocaleTimeString()}\nAction count: ${
-            response.newCount
-          }`;
-        } else {
-          actionResultDiv.textContent = 'Failed to increment action count';
-          actionResultDiv.classList.remove('hidden');
-        }
-      }
-    );
-  });
-
-  // Clear storage
-  clearStorageBtn.addEventListener('click', function () {
-    chrome.storage.local.clear(function () {
-      actionResultDiv.textContent = 'Storage cleared successfully!';
-      actionResultDiv.classList.remove('hidden');
-
-      debugInfoDiv.textContent = `Storage cleared at: ${new Date().toLocaleTimeString()}`;
     });
   });
 

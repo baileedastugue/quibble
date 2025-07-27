@@ -19,9 +19,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       timestamp: new Date().toISOString(),
     });
 
-    // Notify background script to increment action count
-    chrome.runtime.sendMessage({ action: 'incrementAction' });
-
     return true;
   }
 });
