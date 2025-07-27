@@ -65,10 +65,34 @@ function displayUploadedImage() {
       // Add to page
       document.body.appendChild(overlay);
 
-      // Create transparency slider
+      // Create toggle button and transparency slider
       createTransparencySlider(overlay);
+      createImageToggle(overlay);
     }
   });
+}
+
+// Function to create image toggle button
+function createImageToggle(overlay) {
+  const toggleButton = document.createElement('button');
+  toggleButton.textContent = 'Hide image';
+  toggleButton.className = 'toggle-btn';
+
+  let isVisible = true;
+
+  toggleButton.addEventListener('click', function () {
+    if (isVisible) {
+      overlay.classList.add('hidden');
+      toggleButton.textContent = 'Show image';
+      isVisible = false;
+    } else {
+      overlay.classList.remove('hidden');
+      toggleButton.textContent = 'Hide image';
+      isVisible = true;
+    }
+  });
+
+  return toggleButton;
 }
 
 // Function to create transparency slider
@@ -78,7 +102,7 @@ function createTransparencySlider(overlay) {
 
   // Create label
   const label = document.createElement('div');
-  label.textContent = 'Image Transparency';
+  label.textContent = 'Image transparency';
   label.className = 'slider-label';
 
   // Create slider
@@ -103,7 +127,11 @@ function createTransparencySlider(overlay) {
     valueDisplay.textContent = this.value + '%';
   });
 
+  // Create toggle button
+  const toggleButton = createImageToggle(overlay);
+
   // Assemble slider
+  sliderContainer.appendChild(toggleButton);
   sliderContainer.appendChild(label);
   sliderContainer.appendChild(slider);
   sliderContainer.appendChild(valueDisplay);
