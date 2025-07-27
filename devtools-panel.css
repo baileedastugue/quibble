@@ -70,28 +70,6 @@ button:hover {
   overflow-y: auto;
 }
 
-.image-preview {
-  margin-top: 15px;
-  text-align: center;
-}
-
-.image-preview img {
-  max-width: 100%;
-  max-height: 200px;
-  border-radius: 6px;
-  border: 2px solid #e2e8f0;
-  margin-bottom: 10px;
-}
-
-.image-preview #imageInfo {
-  font-size: 12px;
-  color: #6c757d;
-  background: #f8f9fa;
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid #e9ecef;
-}
-
 input[type='file'] {
   display: none;
 }

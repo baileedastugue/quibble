@@ -8,9 +8,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const imageUpload = document.getElementById('imageUpload');
   const uploadButton = document.getElementById('uploadButton');
   const clearImageBtn = document.getElementById('clearImage');
-  const imagePreview = document.getElementById('imagePreview');
-  const previewImg = document.getElementById('previewImg');
-  const imageInfo = document.getElementById('imageInfo');
   const uploadResult = document.getElementById('uploadResult');
 
   // Get page information
@@ -109,22 +106,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 currentImageId: newImage.id, // Set as current image
               },
               function () {
-                // Display preview of the new image
-                previewImg.src = newImage.data;
-                imagePreview.classList.remove('hidden');
-
-                // Show image info
-                imageInfo.innerHTML = `
-                  <strong>File:</strong> ${newImage.name}<br>
-                  <strong>Size:</strong> ${(newImage.size / 1024).toFixed(
-                    2
-                  )} KB<br>
-                  <strong>Dimensions:</strong> ${newImage.width} × ${
-                  newImage.height
-                }px<br>
-                  <strong>Total Images:</strong> ${images.length}
-                `;
-
                 uploadResult.textContent = `Image uploaded successfully! (${images.length} total)`;
                 uploadResult.classList.remove('hidden');
 
@@ -151,8 +132,6 @@ document.addEventListener('DOMContentLoaded', function () {
     chrome.storage.local.remove(
       ['uploadedImages', 'currentImageId'],
       function () {
-        imagePreview.classList.add('hidden');
-        imageInfo.innerHTML = '';
         uploadResult.textContent = 'All images cleared successfully!';
         uploadResult.classList.remove('hidden');
 
@@ -246,12 +225,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateImageList();
                 uploadResult.textContent = 'Image deleted successfully!';
                 uploadResult.classList.remove('hidden');
-
-                // Hide image preview if no images remain
-                if (updatedImages.length === 0) {
-                  imagePreview.classList.add('hidden');
-                  imageInfo.innerHTML = '';
-                }
               }
             );
           }
@@ -266,25 +239,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function (result) {
       const images = result.uploadedImages || [];
       const currentId = result.currentImageId;
-
-      if (images.length > 0) {
-        // Find current image
-        const currentImage =
-          images.find((img) => img.id === currentId) ||
-          images[images.length - 1];
-
-        // Display current image preview
-        previewImg.src = currentImage.data;
-        imagePreview.classList.remove('hidden');
-        imageInfo.innerHTML = `
-        <strong>File:</strong> ${currentImage.name}<br>
-        <strong>Size:</strong> ${(currentImage.size / 1024).toFixed(2)} KB<br>
-        <strong>Dimensions:</strong> ${currentImage.width} × ${
-          currentImage.height
-        }px<br>
-        <strong>Total Images:</strong> ${images.length}
-      `;
-      }
 
       // Update image list
       updateImageList();
