@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Quibble",
+  "version": "1.0.0",
+  "description": "A Chrome extension to overlay Figma files on top of any website",
+  "permissions": ["activeTab", "storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Quibble"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
