@@ -13,14 +13,26 @@
             <h3>Page Information</h3>
             <button id="getPageInfo">Get Page Info</button>
             <button id="getStorage">Get Storage Data</button>
-            <div id="pageInfo" class="data-display" style="display: none;"></div>
+            <div id="pageInfo" class="data-display hidden"></div>
         </div>
         
         <div class="section">
             <h3>Extension Actions</h3>
             <button id="incrementAction">Increment Action Count</button>
             <button id="clearStorage">Clear Storage</button>
-            <div id="actionResult" class="info" style="display: none;"></div>
+            <div id="actionResult" class="info hidden"></div>
+        </div>
+        
+        <div class="section">
+            <h3>Image Uploader</h3>
+            <input type="file" id="imageUpload" accept="image/*" class="hidden">
+            <button id="uploadButton">Choose Image</button>
+            <button id="clearImage">Clear Image</button>
+            <div id="imagePreview" class="image-preview hidden">
+                <img id="previewImg" alt="Preview">
+                <div id="imageInfo"></div>
+            </div>
+            <div id="uploadResult" class="info hidden"></div>
         </div>
         
         <div class="section">
