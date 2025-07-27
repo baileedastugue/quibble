@@ -10,8 +10,8 @@
   max-width: 80vw;
   padding: 0;
   position: fixed;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  transform: translateX(-50%);
   z-index: 10000;
 }
 
@@ -20,28 +20,13 @@
   max-height: 60vh;
   max-width: 100%;
   object-fit: contain;
+  transition: box-shadow 0.2s ease;
+  user-select: none;
 }
 
-#quibble-image-overlay .close-btn {
-  align-items: center;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 50%;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  font-size: 24px;
-  height: 30px;
-  justify-content: center;
-  position: absolute;
-  right: 15px;
-  top: 10px;
-  transition: background 0.2s;
-  width: 30px;
-}
-
-#quibble-image-overlay .close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+#quibble-image-overlay img.focused {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+  cursor: move;
 }
 
 #quibble-image-overlay .image-info {
@@ -128,4 +113,8 @@
 
 #quibble-image-overlay.hidden {
   display: none;
+}
+
+#quibble-image-overlay img.focused:hover {
+  cursor: move;
 }

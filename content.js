@@ -49,14 +49,51 @@ function displayUploadedImage() {
       img.src = result.uploadedImage.data;
       img.alt = result.uploadedImage.name;
 
-      // Create close button
-      const closeBtn = document.createElement('button');
-      closeBtn.textContent = '×'; // TODO: add an icon here and update the styling
-      closeBtn.className = 'close-btn';
-      closeBtn.onclick = () => overlay.remove();
+      // Add double-click event for focus state
+      img.addEventListener('dblclick', function () {
+        this.classList.toggle('focused');
+      });
+
+      // Add drag functionality
+      let isDragging = false;
+      let currentX;
+      let currentY;
+      let initialX;
+      let initialY;
+      let xOffset = 0;
+      let yOffset = 0;
+
+      overlay.addEventListener('mousedown', function (e) {
+        if (img.classList.contains('focused')) {
+          isDragging = true;
+          initialX = e.clientX - xOffset;
+          initialY = e.clientY - yOffset;
+          e.preventDefault();
+        }
+      });
+
+      document.addEventListener('mousemove', function (e) {
+        if (isDragging) {
+          e.preventDefault();
+          currentX = e.clientX - initialX;
+          currentY = e.clientY - initialY;
+          xOffset = currentX;
+          yOffset = currentY;
+
+          overlay.style.transform = `translateX(-50%) translate(${currentX}px, ${currentY}px)`;
+          document.body.classList.add('dragging');
+        }
+      });
+
+      document.addEventListener('mouseup', function () {
+        isDragging = false;
+        document.body.classList.remove('dragging');
+
+        // Remove focus state
+        img.classList.remove('focused');
+      });
 
       // Assemble overlay
-      overlay.appendChild(closeBtn);
       overlay.appendChild(img);
 
       // Add to page
