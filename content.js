@@ -37,73 +37,89 @@ function displayUploadedImage() {
     existingSlider.remove();
   }
 
-  // Check for uploaded image in storage
-  chrome.storage.local.get(['uploadedImage'], function (result) {
-    if (result.uploadedImage && result.uploadedImage.data) {
-      // Create overlay container
-      const overlay = document.createElement('div');
-      overlay.id = 'quibble-image-overlay';
+  // Check for uploaded images in storage
+  chrome.storage.local.get(
+    ['uploadedImages', 'currentImageId'],
+    function (result) {
+      const images = result.uploadedImages || [];
+      let currentId = result.currentImageId;
 
-      // Create image element
-      const img = document.createElement('img');
-      img.src = result.uploadedImage.data;
-      img.alt = result.uploadedImage.name;
-
-      // Add double-click event for focus state
-      img.addEventListener('dblclick', function () {
-        this.classList.toggle('focused');
-      });
-
-      // Add drag functionality
-      let isDragging = false;
-      let currentX;
-      let currentY;
-      let initialX;
-      let initialY;
-      let xOffset = 0;
-      let yOffset = 0;
-
-      overlay.addEventListener('mousedown', function (e) {
-        if (img.classList.contains('focused')) {
-          isDragging = true;
-          initialX = e.clientX - xOffset;
-          initialY = e.clientY - yOffset;
-          e.preventDefault();
+      if (images.length > 0) {
+        // If no current image is set, set it to the last uploaded image
+        if (!currentId) {
+          currentId = images[images.length - 1].id;
+          chrome.storage.local.set({ currentImageId: currentId });
         }
-      });
 
-      document.addEventListener('mousemove', function (e) {
-        if (isDragging) {
-          e.preventDefault();
-          currentX = e.clientX - initialX;
-          currentY = e.clientY - initialY;
-          xOffset = currentX;
-          yOffset = currentY;
+        // Find current image or use the most recent one
+        const currentImage =
+          images.find((img) => img.id === currentId) ||
+          images[images.length - 1];
+        // Create overlay container
+        const overlay = document.createElement('div');
+        overlay.id = 'quibble-image-overlay';
 
-          overlay.style.transform = `translateX(-50%) translate(${currentX}px, ${currentY}px)`;
-          document.body.classList.add('dragging');
-        }
-      });
+        // Create image element
+        const img = document.createElement('img');
+        img.src = currentImage.data;
+        img.alt = currentImage.name;
 
-      document.addEventListener('mouseup', function () {
-        isDragging = false;
-        document.body.classList.remove('dragging');
+        // Add double-click event for focus state
+        img.addEventListener('dblclick', function () {
+          this.classList.toggle('focused');
+        });
 
-        // Remove focus state
-        img.classList.remove('focused');
-      });
+        // Add drag functionality
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
 
-      // Assemble overlay
-      overlay.appendChild(img);
+        overlay.addEventListener('mousedown', function (e) {
+          if (img.classList.contains('focused')) {
+            isDragging = true;
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+            e.preventDefault();
+          }
+        });
 
-      // Add to page
-      document.body.appendChild(overlay);
+        document.addEventListener('mousemove', function (e) {
+          if (isDragging) {
+            e.preventDefault();
+            currentX = e.clientX - initialX;
+            currentY = e.clientY - initialY;
+            xOffset = currentX;
+            yOffset = currentY;
 
-      // Create toggle button and transparency slider
-      createTransparencySlider(overlay);
-      createImageToggle(overlay);
+            overlay.style.transform = `translateX(-50%) translate(${currentX}px, ${currentY}px)`;
+            document.body.classList.add('dragging');
+          }
+        });
+
+        document.addEventListener('mouseup', function () {
+          isDragging = false;
+          document.body.classList.remove('dragging');
+
+          // Remove focus state
+          img.classList.remove('focused');
+        });
+
+        // Assemble overlay
+        overlay.appendChild(img);
+
+        // Add to page
+        document.body.appendChild(overlay);
+
+        // Create toggle button and transparency slider
+        createTransparencySlider(overlay);
+        createImageToggle(overlay);
+      }
     }
-  });
+  );
 }
 
 // Function to create image toggle button
@@ -179,7 +195,10 @@ displayUploadedImage();
 
 // Listen for storage changes to update image display
 chrome.storage.onChanged.addListener(function (changes, namespace) {
-  if (namespace === 'local' && changes.uploadedImage) {
+  if (
+    namespace === 'local' &&
+    (changes.uploadedImages || changes.currentImageId)
+  ) {
     displayUploadedImage();
   }
 });

@@ -82,55 +82,63 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const reader = new FileReader();
       reader.onload = function (e) {
-        // Display preview
-        previewImg.src = e.target.result;
-        imagePreview.classList.remove('hidden');
-
-        // Show image info
-        imageInfo.innerHTML = `
-                    <strong>File:</strong> ${file.name}<br>
-                    <strong>Size:</strong> ${(file.size / 1024).toFixed(
-                      2
-                    )} KB<br>
-                    <strong>Dimensions:</strong> Loading...
-                `;
-
         // Get image dimensions
         const img = new Image();
         img.onload = function () {
-          imageInfo.innerHTML = `
-                        <strong>File:</strong> ${file.name}<br>
-                        <strong>Size:</strong> ${(file.size / 1024).toFixed(
-                          2
-                        )} KB<br>
-                        <strong>Dimensions:</strong> ${img.width} × ${
-            img.height
-          }px
-                    `;
+          // Create new image object
+          const newImage = {
+            id: Date.now().toString(),
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            data: e.target.result,
+            width: img.width,
+            height: img.height,
+            timestamp: new Date().toISOString(),
+          };
+
+          // Get existing images and add new one
+          chrome.storage.local.get(['uploadedImages'], function (result) {
+            const images = result.uploadedImages || [];
+            images.push(newImage);
+
+            // Store updated images array
+            chrome.storage.local.set(
+              {
+                uploadedImages: images,
+                currentImageId: newImage.id, // Set as current image
+              },
+              function () {
+                // Display preview of the new image
+                previewImg.src = newImage.data;
+                imagePreview.classList.remove('hidden');
+
+                // Show image info
+                imageInfo.innerHTML = `
+                  <strong>File:</strong> ${newImage.name}<br>
+                  <strong>Size:</strong> ${(newImage.size / 1024).toFixed(
+                    2
+                  )} KB<br>
+                  <strong>Dimensions:</strong> ${newImage.width} × ${
+                  newImage.height
+                }px<br>
+                  <strong>Total Images:</strong> ${images.length}
+                `;
+
+                uploadResult.textContent = `Image uploaded successfully! (${images.length} total)`;
+                uploadResult.classList.remove('hidden');
+
+                debugInfoDiv.textContent += `\nImage uploaded: ${
+                  newImage.name
+                } at ${new Date().toLocaleTimeString()}`;
+
+                // Update image list display
+                updateImageList();
+              }
+            );
+          });
         };
         img.src = e.target.result;
-
-        // Store image data in extension storage
-        chrome.storage.local.set(
-          {
-            uploadedImage: {
-              name: file.name,
-              type: file.type,
-              size: file.size,
-              data: e.target.result,
-              timestamp: new Date().toISOString(),
-            },
-          },
-          function () {
-            uploadResult.textContent =
-              'Image uploaded and stored successfully!';
-            uploadResult.classList.remove('hidden');
-
-            debugInfoDiv.textContent += `\nImage uploaded: ${
-              file.name
-            } at ${new Date().toLocaleTimeString()}`;
-          }
-        );
       };
       reader.readAsDataURL(file);
     }
@@ -139,34 +147,142 @@ document.addEventListener('DOMContentLoaded', function () {
   clearImageBtn.addEventListener('click', function () {
     imageUpload.value = '';
 
-    imagePreview.classList.add('hidden');
+    // Clear all stored images
+    chrome.storage.local.remove(
+      ['uploadedImages', 'currentImageId'],
+      function () {
+        imagePreview.classList.add('hidden');
+        uploadResult.textContent = 'All images cleared successfully!';
+        uploadResult.classList.remove('hidden');
 
-    // Clear stored image
-    chrome.storage.local.remove(['uploadedImage'], function () {
-      uploadResult.textContent = 'Image cleared successfully!';
-      uploadResult.classList.remove('hidden');
+        debugInfoDiv.textContent += `\nAll images cleared at ${new Date().toLocaleTimeString()}`;
 
-      debugInfoDiv.textContent += `\nImage cleared at ${new Date().toLocaleTimeString()}`;
-    });
+        // Clear image list
+        updateImageList();
+      }
+    );
   });
 
-  // Load existing image on panel load
-  chrome.storage.local.get(['uploadedImage'], function (result) {
-    if (result.uploadedImage) {
-      previewImg.src = result.uploadedImage.data;
-      imagePreview.classList.remove('hidden');
-      imageInfo.innerHTML = `
-                <strong>File:</strong> ${result.uploadedImage.name}<br>
-                <strong>Size:</strong> ${(
-                  result.uploadedImage.size / 1024
-                ).toFixed(2)} KB<br>
-                <strong>Type:</strong> ${result.uploadedImage.type}<br>
-                <strong>Uploaded:</strong> ${new Date(
-                  result.uploadedImage.timestamp
-                ).toLocaleString()}
+  // Function to update image list display
+  function updateImageList() {
+    chrome.storage.local.get(
+      ['uploadedImages', 'currentImageId'],
+      function (result) {
+        const images = result.uploadedImages || [];
+        const currentId = result.currentImageId;
+
+        // Update image list in the panel
+        const imageListContainer = document.getElementById('imageList');
+        if (imageListContainer) {
+          if (images.length === 0) {
+            imageListContainer.innerHTML = '<p>No images uploaded yet.</p>';
+          } else {
+            let listHTML = '<h4>Uploaded Images:</h4>';
+            images.forEach((image, index) => {
+              const isCurrent = image.id === currentId;
+              listHTML += `
+              <div class="image-item ${isCurrent ? 'current' : ''}">
+                <span class="image-name">${image.name}</span>
+                <span class="image-size">${(image.size / 1024).toFixed(
+                  1
+                )} KB</span>
+                <button class="select-btn" data-id="${image.id}">${
+                isCurrent ? 'Current' : 'Select'
+              }</button>
+                <button class="delete-btn" data-id="${image.id}">Delete</button>
+              </div>
             `;
+            });
+            imageListContainer.innerHTML = listHTML;
+
+            // Add event listeners for select and delete buttons
+            addImageListEventListeners();
+          }
+        }
+      }
+    );
+  }
+
+  // Function to add event listeners to image list buttons
+  function addImageListEventListeners() {
+    // Select buttons
+    document.querySelectorAll('.select-btn').forEach((btn) => {
+      btn.addEventListener('click', function () {
+        const imageId = this.getAttribute('data-id');
+        chrome.storage.local.set({ currentImageId: imageId }, function () {
+          updateImageList();
+          uploadResult.textContent = 'Image selected successfully!';
+          uploadResult.classList.remove('hidden');
+        });
+      });
+    });
+
+    // Delete buttons
+    document.querySelectorAll('.delete-btn').forEach((btn) => {
+      btn.addEventListener('click', function () {
+        const imageId = this.getAttribute('data-id');
+        chrome.storage.local.get(
+          ['uploadedImages', 'currentImageId'],
+          function (result) {
+            const images = result.uploadedImages || [];
+            const currentId = result.currentImageId;
+
+            // Remove the image
+            const updatedImages = images.filter((img) => img.id !== imageId);
+
+            // If we deleted the current image, set a new current image
+            let newCurrentId = currentId;
+            if (imageId === currentId && updatedImages.length > 0) {
+              newCurrentId = updatedImages[updatedImages.length - 1].id; // Set to most recent
+            }
+
+            chrome.storage.local.set(
+              {
+                uploadedImages: updatedImages,
+                currentImageId: newCurrentId,
+              },
+              function () {
+                updateImageList();
+                uploadResult.textContent = 'Image deleted successfully!';
+                uploadResult.classList.remove('hidden');
+              }
+            );
+          }
+        );
+      });
+    });
+  }
+
+  // Load existing images on panel load
+  chrome.storage.local.get(
+    ['uploadedImages', 'currentImageId'],
+    function (result) {
+      const images = result.uploadedImages || [];
+      const currentId = result.currentImageId;
+
+      if (images.length > 0) {
+        // Find current image
+        const currentImage =
+          images.find((img) => img.id === currentId) ||
+          images[images.length - 1];
+
+        // Display current image preview
+        previewImg.src = currentImage.data;
+        imagePreview.classList.remove('hidden');
+        imageInfo.innerHTML = `
+        <strong>File:</strong> ${currentImage.name}<br>
+        <strong>Size:</strong> ${(currentImage.size / 1024).toFixed(2)} KB<br>
+        <strong>Dimensions:</strong> ${currentImage.width} × ${
+          currentImage.height
+        }px<br>
+        <strong>Total Images:</strong> ${images.length}
+      `;
+      }
+
+      // Update image list
+      updateImageList();
     }
-  });
+  );
 
   // Initialize debug info
   debugInfoDiv.textContent = `Panel loaded at: ${new Date().toLocaleTimeString()}\nUse the buttons above to interact with the extension.`;

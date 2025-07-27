@@ -99,3 +99,69 @@ input[type='file'] {
 .hidden {
   display: none;
 }
+
+/* Image list styles */
+#imageList {
+  margin-top: 10px;
+}
+
+.image-item {
+  align-items: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 10px;
+}
+
+.image-item.current {
+  background: #e6fffa;
+  border-color: #81e6d9;
+}
+
+.image-name {
+  font-weight: 500;
+  flex: 1;
+}
+
+.image-size {
+  color: #6c757d;
+  font-size: 12px;
+  margin: 0 10px;
+}
+
+.select-btn,
+.delete-btn {
+  background: #667eea;
+  border: none;
+  border-radius: 3px;
+  color: white;
+  cursor: pointer;
+  font-size: 11px;
+  margin-left: 5px;
+  padding: 4px 8px;
+}
+
+.select-btn:hover {
+  background: #5a67d8;
+  cursor: pointer;
+}
+
+.delete-btn {
+  background: #e53e3e;
+}
+
+.delete-btn:hover {
+  background: #c53030;
+  cursor: pointer;
+}
+
+.image-item.current .select-btn {
+  background: #38a169;
+}
+
+.image-item.current .select-btn:hover {
+  background: #38a169;
+}
