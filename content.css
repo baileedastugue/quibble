@@ -6,8 +6,6 @@
   display: flex;
   flex-direction: column;
   left: 50%;
-  max-height: 80vh;
-  max-width: 80vw;
   padding: 0;
   position: fixed;
   top: 0;
@@ -16,9 +14,7 @@
 }
 
 #quibble-image-overlay img {
-  max-height: 60vh;
-  max-width: 100%;
-  object-fit: contain;
+  max-width: none !important;
   transition: box-shadow 0.2s ease;
   user-select: none;
 }

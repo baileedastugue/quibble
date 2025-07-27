@@ -1,0 +1,107 @@
+/* CSS Reset for DevTools Panel */
+
+/* Reset all elements */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Reset HTML and body */
+html,
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #333;
+}
+
+/* Reset headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  margin: 0;
+  padding: 0;
+}
+
+/* Reset paragraphs */
+p {
+  margin: 0;
+  padding: 0;
+}
+
+/* Reset lists */
+ul,
+ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Reset links */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Reset buttons */
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+/* Reset inputs */
+input,
+select,
+textarea {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+  margin: 0;
+  outline: none;
+  padding: 0;
+}
+
+/* Reset images */
+img {
+  border: 0;
+  display: block;
+  max-width: none;
+  vertical-align: middle;
+}
+
+/* Reset tables */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* Reset form elements */
+fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Reset iframes */
+iframe {
+  border: 0;
+}
+
+/* Reset code elements */
+code,
+pre {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+}
