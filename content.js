@@ -1,7 +1,7 @@
 // Content script that runs in the context of web pages
 console.log('Quibble Extension content script loaded');
 
-// Listen for messages from the popup
+// Listen for messages from the DevTools panel
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.action === 'performAction') {
     const pageTitle = document.title;
@@ -10,7 +10,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     const links = document.querySelectorAll('a');
     const linkCount = links.length;
 
-    // Send response back to popup
+    // Send response back to DevTools panel
     sendResponse({
       success: true,
       pageTitle: pageTitle,

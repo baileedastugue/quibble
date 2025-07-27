@@ -8,7 +8,7 @@ chrome.runtime.onInstalled.addListener(function () {
   });
 });
 
-// Listen for messages from popup or content scripts
+// Listen for messages from DevTools panel or content scripts
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.action === 'getStats') {
     chrome.storage.local.get(['actionCount'], function (result) {
