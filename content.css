@@ -16,7 +16,6 @@
 }
 
 #quibble-image-overlay img {
-  border-radius: 8px;
   max-height: 60vh;
   max-width: 100%;
   object-fit: contain;
@@ -41,7 +40,7 @@
 #quibble-transparency-slider {
   align-items: center;
   background: rgba(0, 0, 0, 0.8);
-  border-radius: 8px;
+  border-radius: 4px;
   bottom: 20px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   display: flex;
