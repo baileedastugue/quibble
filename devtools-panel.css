@@ -99,15 +99,36 @@ input[type='file'] {
   border-color: #81e6d9;
 }
 
+.image-thumbnail {
+  flex-shrink: 0;
+  height: 40px;
+  margin-right: 12px;
+  width: 40px;
+}
+
+.image-thumbnail img {
+  border-radius: 2px;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.image-details {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .image-name {
   font-weight: 500;
-  flex: 1;
+  font-size: 14px;
+  margin-bottom: 2px;
 }
 
 .image-size {
   color: #6c757d;
-  font-size: 12px;
-  margin: 0 10px;
+  font-size: 10px;
 }
 
 .select-btn,

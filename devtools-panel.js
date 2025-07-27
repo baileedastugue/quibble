@@ -162,10 +162,15 @@ document.addEventListener('DOMContentLoaded', function () {
               const isCurrent = image.id === currentId;
               listHTML += `
               <div class="image-item ${isCurrent ? 'current' : ''}">
-                <span class="image-name">${image.name}</span>
-                <span class="image-size">${(image.size / 1024).toFixed(
-                  1
-                )} KB</span>
+                <div class="image-thumbnail">
+                  <img src="${image.data}" alt="${image.name}" />
+                </div>
+                <div class="image-details">
+                  <span class="image-name">${image.name}</span>
+                  <span class="image-size">${(image.size / 1024).toFixed(
+                    1
+                  )} KB</span>
+                </div>
                 <button class="select-btn" data-id="${image.id}">${
                 isCurrent ? 'Current' : 'Select'
               }</button>
