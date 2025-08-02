@@ -9,6 +9,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const uploadButton = document.getElementById('uploadButton');
   const clearImageBtn = document.getElementById('clearImage');
   const uploadResult = document.getElementById('uploadResult');
+  const screenWidthDiv = document.getElementById('screenWidth');
+
+  // Size options array
+  const sizeOptions = ['320px', '375px', '425px', '768px', '1024px', '1440px'];
 
   // Get page information
   getPageInfoBtn.addEventListener('click', function () {
@@ -45,18 +49,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // Listen for panel shown/hidden events
-  window.addEventListener('message', function (event) {
-    if (event.data.type === 'panelShown') {
-      console.log('Panel is now visible');
-      debugInfoDiv.textContent +=
-        '\nPanel shown at: ' + new Date().toLocaleTimeString();
-    }
-  });
-
   // Image uploader functionality
   uploadButton.addEventListener('click', function () {
-    console.log('Upload button clicked');
     imageUpload.click();
   });
 
@@ -79,10 +73,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const reader = new FileReader();
       reader.onload = function (e) {
-        // Get image dimensions
         const img = new Image();
         img.onload = function () {
-          // Create new image object
           const newImage = {
             id: Date.now().toString(),
             name: file.name,
@@ -91,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
             data: e.target.result,
             width: img.width,
             height: img.height,
-            displaySize: 'medium', // Default size
+            displaySize: '1024px', // Default size
             timestamp: new Date().toISOString(),
           };
 
@@ -103,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Store updated images array
             chrome.storage.local.set(
               {
-                uploadedImages: images,
+                uploadedImages: images.sort((a, b) => a.width - b.width),
                 currentImageId: newImage.id, // Set as current image
               },
               function () {
@@ -177,18 +169,15 @@ document.addEventListener('DOMContentLoaded', function () {
               }</button>
                 <button class="delete-btn" data-id="${image.id}">Delete</button>
                 <select class="size-dropdown" data-id="${image.id}">
-                  <option value="small" ${
-                    image.displaySize === 'small' ? 'selected' : ''
-                  }>Small</option>
-                  <option value="medium" ${
-                    image.displaySize === 'medium' ? 'selected' : ''
-                  }>Medium</option>
-                  <option value="large" ${
-                    image.displaySize === 'large' ? 'selected' : ''
-                  }>Large</option>
-                  <option value="x-large" ${
-                    image.displaySize === 'x-large' ? 'selected' : ''
-                  }>X-Large</option>
+                  ${sizeOptions
+                    .map(
+                      (size) => `
+                    <option value="${size}" ${
+                        image.displaySize === size ? 'selected' : ''
+                      }>${size}</option>
+                  `
+                    )
+                    .join('')}
                 </select>
               </div>
             `;
@@ -211,7 +200,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const imageId = this.getAttribute('data-id');
         chrome.storage.local.set({ currentImageId: imageId }, function () {
           updateImageList();
-          uploadResult.textContent = 'Image selected successfully!';
           uploadResult.classList.remove('hidden');
         });
       });
@@ -274,14 +262,30 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  function updateImageFromScreenWidth(width) {
+    chrome.storage.local.get(['uploadedImages'], function (result) {
+      const images = result.uploadedImages || [];
+      const image = images.find((img) => img.width === width);
+      if (image) {
+        chrome.storage.local.set({ currentImageId: image.id });
+        updateImageList();
+      }
+    });
+  }
+
+  chrome.runtime.onConnect.addListener(function (port) {
+    port.onMessage.addListener(function (msg) {
+      if (port.name === '_quibble') {
+        screenWidthDiv.innerHTML = `<strong>Current width:</strong> ${msg.width}px`;
+        updateImageFromScreenWidth(msg.width);
+      }
+    });
+  });
+
   // Load existing images on panel load
   chrome.storage.local.get(
     ['uploadedImages', 'currentImageId'],
     function (result) {
-      const images = result.uploadedImages || [];
-      const currentId = result.currentImageId;
-
-      // Update image list
       updateImageList();
     }
   );

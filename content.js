@@ -193,6 +193,12 @@ function createTransparencySlider(overlay) {
 // Display image when page loads
 displayUploadedImage();
 
+var port = chrome.runtime.connect({ name: '_quibble' });
+port.postMessage({ width: window.innerWidth });
+window.addEventListener('resize', function () {
+  port.postMessage({ width: window.innerWidth });
+});
+
 // Listen for storage changes to update image display
 chrome.storage.onChanged.addListener(function (changes, namespace) {
   if (
