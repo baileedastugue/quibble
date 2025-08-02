@@ -282,13 +282,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // Load existing images on panel load
-  chrome.storage.local.get(
-    ['uploadedImages', 'currentImageId'],
-    function (result) {
-      updateImageList();
-    }
-  );
+  updateImageList();
 
   // Initialize debug info
   debugInfoDiv.textContent = `Panel loaded at: ${new Date().toLocaleTimeString()}\nUse the buttons above to interact with the extension.`;
