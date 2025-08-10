@@ -23,13 +23,19 @@
                 <button id="addSection">Add Section</button>
             </div>
         </div>
-
-        <div id="sectionList"></div>
-        
         <div class="section">
             <h2>Page information</h2>
             <div id="screenWidth" class="screen-info">Screen width: </div>
+            <div class="overlay-controls">
+                <button id="toggleOverlay" class="overlay-toggle">Hide Overlay</button>
+                <div class="transparency-control">
+                    <label for="transparencySlider">Transparency:</label>
+                    <input type="range" id="transparencySlider" min="20" max="100" value="100">
+                    <span id="transparencyValue">100%</span>
+                </div>
+            </div>
         </div>
+        <div id="sectionList"></div>
     </div>
     
     <script src="image-manager.js"></script>

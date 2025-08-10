@@ -153,8 +153,6 @@ function createImageElement(image, sectionId, isCurrImg) {
 
 // Updates the images rendered in a section when an image is added, removed, or updated
 function updateSectionImageList(sectionId) {
-  console.log('updateSectionImageList called');
-  console.log('sectionId: ', sectionId);
   chrome.storage.local.get(['sections', 'currSectionId'], function (result) {
     const { sections, currSectionId } = result;
 
@@ -197,7 +195,6 @@ function updateImageFromScreenWidth(width) {
   chrome.storage.local.get(['sections', 'currSectionId'], function (result) {
     const { sections, currSectionId } = result;
     if (!sections || !currSectionId) {
-      console.log('no sections or currSectionId');
       return;
     }
     const images = sections[currSectionId].images;
@@ -287,7 +284,6 @@ function clearSectionImages(sectionId) {
 
 chrome.runtime.onConnect.addListener(function (port) {
   port.onMessage.addListener(function (msg) {
-    console.log('msg: ', msg);
     if (port.name === '_quibble') {
       screenWidthDiv.innerHTML = `<strong>Current width:</strong> ${msg.width}px`;
       updateImageFromScreenWidth(msg.width);

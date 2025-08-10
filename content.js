@@ -86,91 +86,48 @@ function imageDragFunctionality(overlay, img) {
 }
 
 function checkStoredImages() {
-  chrome.storage.local.get(['sections', 'currSectionId'], function (result) {
-    const { sections, currSectionId } = result;
-    if (!sections || !currSectionId) {
-      return;
-    }
-    const currSection = sections[currSectionId];
-    const currentImage = currSection.images[currSection.currImageId];
+  chrome.storage.local.get(
+    ['sections', 'currSectionId', 'overlayVisible', 'overlayTransparency'],
+    function (result) {
+      const { sections, currSectionId, overlayVisible, overlayTransparency } =
+        result;
+      if (!sections || !currSectionId) {
+        return;
+      }
 
-    let overlay = document.createElement('div');
-    overlay.id = 'quibble-image-overlay';
+      const currSection = sections[currSectionId];
+      const currentImage = currSection.images[currSection.currImageId];
 
-    const img = document.createElement('img');
-    img.src = currentImage.data;
-    img.alt = currentImage.name;
-    img.addEventListener('dblclick', function () {
-      this.classList.toggle('focused');
-    });
+      if (!currentImage) {
+        return;
+      }
 
-    overlay = imageDragFunctionality(overlay, img);
-    overlay.appendChild(img);
+      let overlay = document.createElement('div');
+      overlay.id = 'quibble-image-overlay';
 
-    document.body.appendChild(overlay);
+      const img = document.createElement('img');
+      img.src = currentImage.data;
+      img.alt = currentImage.name;
+      img.addEventListener('dblclick', function () {
+        this.classList.toggle('focused');
+      });
 
-    const sliderContainer = createTransparencySlider(overlay);
-    document.body.appendChild(sliderContainer);
-  });
-}
-
-function createImageToggle(overlay) {
-  const toggleButton = document.createElement('button');
-  toggleButton.textContent = 'Hide image';
-  toggleButton.className = 'toggle-btn';
-
-  let isVisible = true;
-
-  toggleButton.addEventListener('click', function () {
-    if (isVisible) {
-      overlay.classList.add('hidden');
-      toggleButton.textContent = 'Show image';
-      isVisible = false;
-    } else {
-      overlay.classList.remove('hidden');
-      toggleButton.textContent = 'Hide image';
-      isVisible = true;
-    }
-  });
-
-  return toggleButton;
-}
-
-function createTransparencySlider(overlay) {
-  const sliderContainer = document.createElement('div');
-  sliderContainer.id = 'quibble-transparency-slider';
-
-  const label = document.createElement('div');
-  label.textContent = 'Image transparency';
-  label.className = 'slider-label';
-
-  const slider = document.createElement('input');
-  slider.type = 'range';
-  slider.min = '25';
-  slider.max = '100';
-  slider.value = '100';
-
-  const valueDisplay = document.createElement('div');
-  valueDisplay.textContent = '100%';
-  valueDisplay.className = 'slider-value';
-
-  slider.addEventListener('input', function () {
-    const opacity = this.value / 100;
-    const img = overlay.querySelector('img');
-    if (img) {
+      const opacity =
+        (overlayTransparency !== undefined ? overlayTransparency : 100) / 100;
       img.style.opacity = opacity;
+
+      overlay = imageDragFunctionality(overlay, img);
+      overlay.appendChild(img);
+
+      if (overlayVisible !== false) {
+        overlay.style.display = 'flex';
+      } else {
+        overlay.style.display = 'none';
+      }
+
+      document.body.appendChild(overlay);
     }
-    valueDisplay.textContent = this.value + '%';
-  });
-
-  const toggleButton = createImageToggle(overlay);
-
-  sliderContainer.appendChild(toggleButton);
-  sliderContainer.appendChild(label);
-  sliderContainer.appendChild(slider);
-  sliderContainer.appendChild(valueDisplay);
-
-  return sliderContainer;
+  );
 }
 
 function listenForStorageChanges(changes, namespace) {
@@ -188,6 +145,25 @@ function postWidthMessage() {
   port.postMessage({ width: window.innerWidth });
 }
 
+function toggleOverlay(visible) {
+  const overlay = document.getElementById('quibble-image-overlay');
+  if (overlay) {
+    if (visible) {
+      overlay.style.display = 'flex';
+    } else {
+      overlay.style.display = 'none';
+    }
+  }
+}
+
+function updateTransparency(transparency) {
+  const overlay = document.getElementById('quibble-image-overlay');
+  if (overlay) {
+    const img = overlay.querySelector('img');
+    img.style.opacity = transparency / 100;
+  }
+}
+
 // Display image when page loads
 displayUploadedImage();
 postWidthMessage();
@@ -195,6 +171,16 @@ postWidthMessage();
 // Listen for storage changes to update image display
 chrome.storage.onChanged.addListener((changes, namespace) => {
   listenForStorageChanges(changes, namespace);
+});
+
+chrome.runtime.onMessage.addListener(function (message) {
+  const { action, visible, transparency } = message;
+  if (action === 'toggleOverlay') {
+    toggleOverlay(visible);
+  }
+  if (action === 'updateTransparency') {
+    updateTransparency(transparency);
+  }
 });
 
 // Clean up when content script gets disconnected
