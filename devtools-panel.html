@@ -11,9 +11,17 @@
         <h1>Quibble</h1>
         <div class="section">
             <h2>Section management</h2>
-            <input type="text" id="sectionName" placeholder="Section name">
-            <input type="text" id="sectionURL" placeholder="URL for section">
-            <button id="addSection">Add Section</button>
+            <div class="input-row">
+                <div class="input-group">
+                    <input type="text" id="sectionName" placeholder="Section name">
+                    <div id="sectionNameError" class="error-message hidden"></div>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="sectionURL" placeholder="URL for section">
+                    <div id="sectionURLError" class="error-message hidden"></div>
+                </div>
+                <button id="addSection">Add Section</button>
+            </div>
         </div>
 
         <div id="sectionList"></div>

@@ -271,3 +271,42 @@ input[type='file'] {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.error-message {
+  color: #e53e3e;
+  font-size: 12px;
+  margin-top: 0;
+  margin-bottom: 0;
+  font-weight: 500;
+  min-height: 16px;
+}
+
+.error-message.hidden {
+  display: none;
+}
+
+input.error {
+  border-color: #e53e3e;
+  box-shadow: 0 0 0 1px #e53e3e;
+}
+
+.input-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.input-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group input {
+  margin-bottom: 4px;
+}
+
+button {
+  flex-shrink: 0;
+  align-self: flex-end;
+}

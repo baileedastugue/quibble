@@ -69,8 +69,23 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function addSection() {
-    const sectionName = document.getElementById('sectionName').value;
-    const sectionURL = document.getElementById('sectionURL').value;
+    const sectionName = document.getElementById('sectionName').value.trim();
+    const sectionURL = document.getElementById('sectionURL').value.trim();
+
+    clearSectionErrors();
+
+    let hasErrors = false;
+    if (!sectionName) {
+      hasErrors = true;
+      showSectionError('sectionName', 'Section name is required');
+    }
+    if (!sectionURL) {
+      hasErrors = true;
+      showSectionError('sectionURL', 'Section URL is required');
+    }
+    if (hasErrors) {
+      return;
+    }
 
     chrome.storage.local.get(['sections', 'currSectionId'], function (result) {
       const { sections, currSectionId } = result;
@@ -109,6 +124,33 @@ document.addEventListener('DOMContentLoaded', function () {
     // Clear form inputs
     document.getElementById('sectionName').value = '';
     document.getElementById('sectionURL').value = '';
+  }
+
+  function showSectionError(fieldId, message) {
+    const errorElement = document.getElementById(fieldId + 'Error');
+    const inputElement = document.getElementById(fieldId);
+
+    if (errorElement) {
+      errorElement.textContent = message;
+      errorElement.classList.remove('hidden');
+    }
+
+    if (inputElement) {
+      inputElement.classList.add('error');
+    }
+  }
+
+  function clearSectionErrors() {
+    const errorElements = document.querySelectorAll('.error-message');
+    const inputElements = document.querySelectorAll('input[type="text"]');
+
+    errorElements.forEach((element) => {
+      element.classList.add('hidden');
+    });
+
+    inputElements.forEach((element) => {
+      element.classList.remove('error');
+    });
   }
 
   function deleteSection(sectionId) {
