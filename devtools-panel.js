@@ -1,289 +1,282 @@
 document.addEventListener('DOMContentLoaded', function () {
-  const getPageInfoBtn = document.getElementById('getPageInfo');
-  const getStorageBtn = document.getElementById('getStorage');
-  const pageInfoDiv = document.getElementById('pageInfo');
-  const debugInfoDiv = document.getElementById('debugInfo');
+  const addSectionBtn = document.getElementById('addSection');
 
-  // Image uploader elements
-  const imageUpload = document.getElementById('imageUpload');
-  const uploadButton = document.getElementById('uploadButton');
-  const clearImageBtn = document.getElementById('clearImage');
-  const uploadResult = document.getElementById('uploadResult');
-  const screenWidthDiv = document.getElementById('screenWidth');
+  addSectionBtn.addEventListener('click', addSection);
 
-  // Size options array
-  const sizeOptions = ['320px', '375px', '425px', '768px', '1024px', '1440px'];
-
-  // Get page information
-  getPageInfoBtn.addEventListener('click', function () {
-    chrome.devtools.inspectedWindow.eval(
-      `({
-                title: document.title,
-                url: window.location.href,
-                links: document.querySelectorAll('a').length,
-                images: document.querySelectorAll('img').length,
-                timestamp: new Date().toISOString()
-            })`,
-      function (result, isException) {
-        if (isException) {
-          pageInfoDiv.textContent = 'Error: ' + isException.value;
+  // Function to check if any section URL matches current page and open it
+  function checkAndOpenMatchingSection(currentURL) {
+    chrome.storage.local.get(['sections'], function (result) {
+      const sections = result.sections || {};
+      Object.keys(sections).forEach((sectionId) => {
+        const section = sections[sectionId];
+        const normalizedCurrent = normalizeURL(currentURL);
+        const normalizedSection = normalizeURL(section.url);
+        if (normalizedCurrent === normalizedSection) {
+          openSectionAccordion(section.id);
         } else {
-          pageInfoDiv.textContent = JSON.stringify(result, null, 2);
+          closeSectionAccordion(section.id);
         }
-        pageInfoDiv.classList.remove('hidden');
-      }
-    );
-  });
-
-  // Get storage data
-  getStorageBtn.addEventListener('click', function () {
-    // Send message to background script to get storage
-    chrome.runtime.sendMessage({ action: 'getStats' }, function (response) {
-      if (response) {
-        pageInfoDiv.textContent = JSON.stringify(response, null, 2);
-        pageInfoDiv.classList.remove('hidden');
-      } else {
-        pageInfoDiv.textContent = 'No storage data found';
-        pageInfoDiv.classList.remove('hidden');
-      }
+      });
     });
-  });
+  }
 
-  // Image uploader functionality
-  uploadButton.addEventListener('click', function () {
-    imageUpload.click();
-  });
+  // Function to normalize URLs for comparison
+  function normalizeURL(url) {
+    if (!url) return '';
 
-  imageUpload.addEventListener('change', function (event) {
-    const file = event.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        uploadResult.textContent = 'Please select a valid image file.';
-        uploadResult.classList.remove('hidden');
-        return;
-      }
+    // Remove protocol, trailing slash, www. prefix
+    let normalized = url.replace(/^https?:\/\//, '');
+    normalized = normalized.replace(/\/$/, '');
+    normalized = normalized.replace(/^www\./, '');
 
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        uploadResult.textContent = 'Image size must be less than 5MB.';
-        uploadResult.classList.remove('hidden');
-        return;
-      }
+    return normalized.toLowerCase();
+  }
 
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const img = new Image();
-        img.onload = function () {
-          const newImage = {
-            id: Date.now().toString(),
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            data: e.target.result,
-            width: img.width,
-            height: img.height,
-            displaySize: '1024px', // Default size
-            timestamp: new Date().toISOString(),
-          };
+  // Function to open a specific section accordion
+  function openSectionAccordion(sectionId) {
+    chrome.storage.local.set({ currSectionId: sectionId });
+    const sectionHeader = document.querySelector(
+      `[data-section-id="${sectionId}"].accordion-header`
+    );
+    const sectionContent = document.querySelector(
+      `[data-section-id="${sectionId}"].accordion-content`
+    );
+    const toggleIcon = document.querySelector(
+      `[data-section-id="${sectionId}"].accordion-header .accordion-toggle`
+    );
 
-          // Get existing images and add new one
-          chrome.storage.local.get(['uploadedImages'], function (result) {
-            const images = result.uploadedImages || [];
-            images.push(newImage);
-
-            // Store updated images array
-            chrome.storage.local.set(
-              {
-                uploadedImages: images.sort((a, b) => a.width - b.width),
-                currentImageId: newImage.id, // Set as current image
-              },
-              function () {
-                uploadResult.textContent = `Image uploaded successfully! (${images.length} total)`;
-                uploadResult.classList.remove('hidden');
-
-                debugInfoDiv.textContent += `\nImage uploaded: ${
-                  newImage.name
-                } at ${new Date().toLocaleTimeString()}`;
-
-                // Update image list display
-                updateImageList();
-              }
-            );
-          });
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
+    if (sectionContent && sectionHeader && toggleIcon) {
+      sectionContent.classList.remove('collapsed');
+      toggleIcon.textContent = '▼';
     }
-  });
+  }
 
-  clearImageBtn.addEventListener('click', function () {
-    imageUpload.value = '';
-
-    // Clear all stored images
-    chrome.storage.local.remove(
-      ['uploadedImages', 'currentImageId'],
-      function () {
-        uploadResult.textContent = 'All images cleared successfully!';
-        uploadResult.classList.remove('hidden');
-
-        debugInfoDiv.textContent += `\nAll images cleared at ${new Date().toLocaleTimeString()}`;
-
-        // Clear image list
-        updateImageList();
-      }
+  function closeSectionAccordion(sectionId) {
+    const sectionHeader = document.querySelector(
+      `[data-section-id="${sectionId}"].accordion-header`
     );
-  });
+    const sectionContent = document.querySelector(
+      `[data-section-id="${sectionId}"].accordion-content`
+    );
+    const toggleIcon = document.querySelector(
+      `[data-section-id="${sectionId}"].accordion-header .accordion-toggle`
+    );
 
-  // Function to update image list display
-  function updateImageList() {
-    chrome.storage.local.get(
-      ['uploadedImages', 'currentImageId'],
-      function (result) {
-        const images = result.uploadedImages || [];
-        const currentId = result.currentImageId;
+    if (sectionContent && sectionHeader && toggleIcon) {
+      sectionContent.classList.add('collapsed');
+      toggleIcon.textContent = '▶';
+    }
+  }
 
-        // Update image list in the panel
-        const imageListContainer = document.getElementById('imageList');
-        if (imageListContainer) {
-          if (images.length === 0) {
-            imageListContainer.innerHTML = '<p>No images uploaded yet.</p>';
-          } else {
-            let listHTML = '<h4>Uploaded Images:</h4>';
-            images.forEach((image, index) => {
-              const isCurrent = image.id === currentId;
-              listHTML += `
-              <div class="image-item ${isCurrent ? 'current' : ''}">
-                <div class="image-thumbnail">
-                  <img src="${image.data}" alt="${image.name}" />
-                </div>
-                <div class="image-details">
-                  <span class="image-name">${image.name}</span>
-                  <span class="image-size">${(image.size / 1024).toFixed(
-                    1
-                  )} KB</span>
-                </div>
-                <button class="select-btn" data-id="${image.id}">${
-                isCurrent ? 'Current' : 'Select'
-              }</button>
-                <button class="delete-btn" data-id="${image.id}">Delete</button>
-                <select class="size-dropdown" data-id="${image.id}">
-                  ${sizeOptions
-                    .map(
-                      (size) => `
-                    <option value="${size}" ${
-                        image.displaySize === size ? 'selected' : ''
-                      }>${size}</option>
-                  `
-                    )
-                    .join('')}
-                </select>
-              </div>
-            `;
-            });
-            imageListContainer.innerHTML = listHTML;
+  function addSection() {
+    const sectionName = document.getElementById('sectionName').value;
+    const sectionURL = document.getElementById('sectionURL').value;
 
-            // Add event listeners for select and delete buttons
-            addImageListEventListeners();
+    chrome.storage.local.get(['sections', 'currSectionId'], function (result) {
+      const { sections, currSectionId } = result;
+      let currentSections = sections || {};
+      const isCurrSection = currSectionId === null;
+      const id = Date.now().toString();
+      const newSection = {
+        id,
+        name: sectionName,
+        url: sectionURL,
+        images: {},
+        currImageId: null,
+      };
+      currentSections[id] = newSection;
+
+      const sectionListContainer = document.getElementById('sectionList');
+      const sectionElement = createSectionAccordion(newSection);
+      sectionListContainer.appendChild(sectionElement);
+
+      // Check if any section URL matches current page and open it
+      chrome.devtools.inspectedWindow.eval(
+        'window.location.href',
+        function (result, isException) {
+          if (!isException && result) {
+            checkAndOpenMatchingSection(result);
           }
         }
-      }
+      );
+
+      chrome.storage.local.set({
+        sections: currentSections,
+        currSectionId: isCurrSection ? newSection.id : currSectionId,
+      });
+    });
+
+    // Clear form inputs
+    document.getElementById('sectionName').value = '';
+    document.getElementById('sectionURL').value = '';
+  }
+
+  function deleteSection(sectionId) {
+    chrome.storage.local.get(['sections'], function (result) {
+      const { sections } = result;
+      delete sections[sectionId];
+
+      // TODO: update currSectionId if it was the deleted section
+
+      chrome.storage.local.set(
+        {
+          sections,
+        },
+        () => {
+          const element = document.querySelector(
+            `[data-section-id="${sectionId}"].section-item`
+          );
+          if (element) {
+            element.remove();
+          }
+        }
+      );
+    });
+  }
+
+  function refreshSectionList() {
+    chrome.storage.local.get(['sections'], function (result) {
+      let { sections } = result;
+      sections = sections || {};
+      const sectionListContainer = document.getElementById('sectionList');
+
+      Object.keys(sections).forEach((sectionId) => {
+        const section = sections[sectionId];
+        const sectionElement = createSectionAccordion(section);
+        sectionListContainer.appendChild(sectionElement);
+        updateSectionImageList(section.id);
+      });
+
+      // Check if any section URL matches current page and open it
+      chrome.devtools.inspectedWindow.eval(
+        'window.location.href',
+        function (result, isException) {
+          if (!isException && result) {
+            checkAndOpenMatchingSection(result);
+          }
+        }
+      );
+    });
+  }
+
+  function createSectionAccordion(section) {
+    const sectionItem = document.createElement('div');
+    sectionItem.classList.add('section-item', 'accordion');
+    sectionItem.setAttribute('data-section-id', section.id);
+
+    // Section header (clickable for accordion)
+    const sectionHeader = document.createElement('div');
+    sectionHeader.classList.add('section-header', 'accordion-header');
+    sectionHeader.setAttribute('data-section-id', section.id);
+
+    const sectionName = document.createElement('span');
+    sectionName.classList.add('section-name');
+    sectionName.textContent = section.name;
+
+    const sectionUrl = document.createElement('span');
+    sectionUrl.classList.add('section-url');
+    sectionUrl.textContent = section.url;
+
+    const toggleIcon = document.createElement('span');
+    toggleIcon.classList.add('accordion-toggle');
+    toggleIcon.textContent = '▶';
+
+    sectionHeader.appendChild(sectionName);
+    sectionHeader.appendChild(sectionUrl);
+    sectionHeader.appendChild(toggleIcon);
+
+    // Section content (collapsible)
+    const sectionContent = document.createElement('div');
+    sectionContent.classList.add(
+      'section-content',
+      'accordion-content',
+      'collapsed'
     );
-  }
+    sectionContent.setAttribute('data-section-id', section.id);
 
-  // Function to add event listeners to image list buttons
-  function addImageListEventListeners() {
-    // Select buttons
-    document.querySelectorAll('.select-btn').forEach((btn) => {
-      btn.addEventListener('click', function () {
-        const imageId = this.getAttribute('data-id');
-        chrome.storage.local.set({ currentImageId: imageId }, function () {
-          updateImageList();
-          uploadResult.classList.remove('hidden');
-        });
-      });
+    // Section image upload
+    const sectionImageUpload = document.createElement('div');
+    sectionImageUpload.classList.add('section-image-upload');
+
+    const uploadInput = document.createElement('input');
+    uploadInput.type = 'file';
+    uploadInput.accept = 'image/*';
+    uploadInput.classList.add('hidden');
+    uploadInput.setAttribute('data-section-id', section.id);
+
+    const uploadBtn = document.createElement('button');
+    uploadBtn.textContent = 'Upload Image';
+    uploadBtn.classList.add('upload-btn');
+    uploadBtn.setAttribute('data-section-id', section.id);
+
+    const clearBtn = document.createElement('button');
+    clearBtn.textContent = 'Clear Images';
+    clearBtn.classList.add('clear-btn');
+    clearBtn.setAttribute('data-section-id', section.id);
+
+    const deleteSectionBtn = document.createElement('button');
+    deleteSectionBtn.textContent = 'Delete Section';
+    deleteSectionBtn.classList.add('delete-section-btn');
+    deleteSectionBtn.setAttribute('data-section-id', section.id);
+
+    const uploadResult = document.createElement('div');
+    uploadResult.classList.add('upload-result', 'hidden');
+    uploadResult.setAttribute('data-section-id', section.id);
+
+    const imageList = document.createElement('div');
+    imageList.classList.add('section-image-list');
+    imageList.setAttribute('data-section-id', section.id);
+
+    sectionImageUpload.appendChild(uploadInput);
+    sectionImageUpload.appendChild(uploadBtn);
+    sectionImageUpload.appendChild(clearBtn);
+    sectionImageUpload.appendChild(deleteSectionBtn);
+    sectionImageUpload.appendChild(uploadResult);
+    sectionImageUpload.appendChild(imageList);
+
+    // Add event listeners
+    uploadBtn.addEventListener('click', function () {
+      uploadInput.click();
     });
 
-    // Size dropdown
-    document.querySelectorAll('.size-dropdown').forEach((dropdown) => {
-      dropdown.addEventListener('change', function () {
-        const imageId = this.getAttribute('data-id');
-        const newSize = this.value;
-
-        chrome.storage.local.get(['uploadedImages'], function (result) {
-          const images = result.uploadedImages || [];
-          const imageIndex = images.findIndex((img) => img.id === imageId);
-
-          if (imageIndex !== -1) {
-            images[imageIndex].displaySize = newSize;
-            chrome.storage.local.set({ uploadedImages: images }, function () {
-              uploadResult.textContent = `Image size updated to ${newSize}!`;
-              uploadResult.classList.remove('hidden');
-            });
-          }
-        });
-      });
+    uploadInput.addEventListener('change', function (event) {
+      handleSectionImageUpload(event, section.id);
     });
 
-    // Delete buttons
-    document.querySelectorAll('.delete-btn').forEach((btn) => {
-      btn.addEventListener('click', function () {
-        const imageId = this.getAttribute('data-id');
-        chrome.storage.local.get(
-          ['uploadedImages', 'currentImageId'],
-          function (result) {
-            const images = result.uploadedImages || [];
-            const currentId = result.currentImageId;
-
-            // Remove the image
-            const updatedImages = images.filter((img) => img.id !== imageId);
-
-            // If we deleted the current image, set a new current image
-            let newCurrentId = currentId;
-            if (imageId === currentId && updatedImages.length > 0) {
-              newCurrentId = updatedImages[updatedImages.length - 1].id; // Set to most recent
-            }
-
-            chrome.storage.local.set(
-              {
-                uploadedImages: updatedImages,
-                currentImageId: newCurrentId,
-              },
-              function () {
-                updateImageList();
-                uploadResult.textContent = 'Image deleted successfully!';
-                uploadResult.classList.remove('hidden');
-              }
-            );
-          }
-        );
-      });
+    clearBtn.addEventListener('click', function () {
+      clearSectionImages(section.id);
     });
-  }
 
-  function updateImageFromScreenWidth(width) {
-    chrome.storage.local.get(['uploadedImages'], function (result) {
-      const images = result.uploadedImages || [];
-      const image = images.find((img) => img.width === width);
-      if (image) {
-        chrome.storage.local.set({ currentImageId: image.id });
-        updateImageList();
+    deleteSectionBtn.addEventListener('click', function () {
+      deleteSection(section.id);
+    });
+
+    // Accordion toggle functionality
+    sectionHeader.addEventListener('click', function () {
+      const content = this.nextElementSibling;
+
+      if (content.classList.contains('collapsed')) {
+        openSectionAccordion(section.id);
+      } else {
+        closeSectionAccordion(section.id);
       }
     });
+
+    sectionContent.appendChild(sectionImageUpload);
+    sectionItem.appendChild(sectionHeader);
+    sectionItem.appendChild(sectionContent);
+
+    return sectionItem;
   }
 
   chrome.runtime.onConnect.addListener(function (port) {
     port.onMessage.addListener(function (msg) {
       if (port.name === '_quibble') {
-        screenWidthDiv.innerHTML = `<strong>Current width:</strong> ${msg.width}px`;
-        updateImageFromScreenWidth(msg.width);
+        checkAndOpenMatchingSection(msg.pageURL);
       }
     });
+    return true;
   });
 
-  updateImageList();
-
-  // Initialize debug info
-  debugInfoDiv.textContent = `Panel loaded at: ${new Date().toLocaleTimeString()}\nUse the buttons above to interact with the extension.`;
+  refreshSectionList();
 });

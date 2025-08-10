@@ -9,33 +9,22 @@
 <body>
     <div class="container">
         <h1>Quibble</h1>
-        
         <div class="section">
-            <h3>Page information</h3>
-            <button id="getPageInfo">Get Page Info</button>
-            <button id="getStorage">Get Storage Data</button>
-            <div id="pageInfo" class="data-display hidden"></div>
+            <h2>Section management</h2>
+            <input type="text" id="sectionName" placeholder="Section name">
+            <input type="text" id="sectionURL" placeholder="URL for section">
+            <button id="addSection">Add Section</button>
         </div>
+
+        <div id="sectionList"></div>
         
         <div class="section">
-            <h3>Image management</h3>
-            <input type="file" id="imageUpload" accept="image/*" class="hidden">
-            <button id="uploadButton">Choose Image</button>
-            <button id="clearImage">Clear all images</button>
-            <div id="uploadResult" class="info hidden"></div>
+            <h2>Page information</h2>
             <div id="screenWidth" class="screen-info">Screen width: </div>
-            <div id="imageList"></div>
-        </div>
-        
-        <div class="section">
-            <h3>Debug information</h3>
-            <div id="debugInfo" class="data-display">
-                Panel loaded successfully!
-                <br>Use the buttons above to interact with the extension.
-            </div>
         </div>
     </div>
     
+    <script src="image-manager.js"></script>
     <script src="devtools-panel.js"></script>
 </body>
 </html> 

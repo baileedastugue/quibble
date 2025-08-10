@@ -1,0 +1,297 @@
+const screenWidthDiv = document.getElementById('screenWidth');
+const priorityOptions = ['1', '2', '3', '4', '5'];
+
+function handleSectionImageUpload(event, sectionId) {
+  const file = event.target.files[0];
+  if (!file.type.startsWith('image/')) {
+    showSectionUploadResult(sectionId, 'Please select a valid image file.');
+    return;
+  }
+
+  // Validate file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    showSectionUploadResult(sectionId, 'Image size must be less than 5MB.');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const img = new Image();
+    img.onload = function () {
+      const newImage = {
+        id: Date.now().toString(),
+        sectionId: sectionId,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        data: e.target.result,
+        priority: 1,
+        width: img.width,
+        height: img.height,
+        timestamp: new Date().toISOString(),
+      };
+      const sectionSuccessfullyUpdated = addImageToSection(sectionId, newImage);
+      if (!sectionSuccessfullyUpdated) {
+        return;
+      }
+      updateSectionImageList(sectionId);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function addImageToSection(sectionId, image) {
+  chrome.storage.local.get(['sections'], function (result) {
+    const { sections } = result;
+    sections[sectionId].images = {
+      ...sections[sectionId].images,
+      [image.id]: image,
+    };
+
+    chrome.storage.local.set({ sections }, function () {
+      showSectionUploadResult(
+        sectionId,
+        `Image uploaded successfully! (${
+          Object.keys(sections[sectionId].images).length
+        } total)`
+      );
+      updateSectionImageList(sectionId);
+      return true;
+    });
+  });
+  return false;
+}
+
+function createImageElement(image, sectionId, isCurrImg) {
+  const imageItem = document.createElement('div');
+  imageItem.classList.add('section-image-item', 'image-item');
+
+  const imageThumbnail = document.createElement('div');
+  imageThumbnail.classList.add('image-thumbnail');
+
+  const img = document.createElement('img');
+  img.src = image.data;
+  img.alt = image.name;
+
+  const imageDetails = document.createElement('div');
+  imageDetails.classList.add('image-details');
+
+  const imageName = document.createElement('span');
+  imageName.classList.add('image-name');
+  imageName.textContent = image.name;
+
+  const imageSize = document.createElement('span');
+  imageSize.classList.add('image-size');
+  imageSize.textContent = `${(image.size / 1024).toFixed(1)} KB | ${
+    image.width
+  }px`;
+
+  const imageManagement = document.createElement('div');
+  imageManagement.classList.add('image-management');
+
+  const selectBtn = document.createElement('button');
+  selectBtn.classList.add('select-btn');
+  selectBtn.setAttribute('data-id', image.id);
+  selectBtn.setAttribute('data-section-id', sectionId);
+  selectBtn.textContent = isCurrImg ? 'Current' : 'Select';
+  selectBtn.classList.add(isCurrImg ? 'selected' : 'unselected');
+
+  selectBtn.addEventListener('click', function () {
+    chrome.storage.local.get(['sections', 'currSectionId'], function (result) {
+      const { sections, currSectionId } = result;
+      sections[currSectionId].currImageId = image.id;
+
+      chrome.storage.local.set({ sections }, function () {
+        updateImageOverlay(currSectionId, image);
+      });
+    });
+  });
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.classList.add('delete-btn');
+  deleteBtn.setAttribute('data-id', image.id);
+  deleteBtn.setAttribute('data-section-id', sectionId);
+  deleteBtn.textContent = 'Delete';
+  deleteBtn.addEventListener('click', function () {
+    deleteSectionImage(sectionId, image.id);
+  });
+
+  const sizeDropdown = document.createElement('select');
+  sizeDropdown.classList.add('size-dropdown');
+  sizeDropdown.setAttribute('data-id', image.id);
+  sizeDropdown.setAttribute('data-section-id', sectionId);
+
+  // Add priority options
+  priorityOptions.forEach((priority) => {
+    const option = document.createElement('option');
+    option.value = priority;
+    option.textContent = priority;
+    if (image.priority === priority) {
+      option.selected = true;
+    }
+    sizeDropdown.appendChild(option);
+  });
+
+  sizeDropdown.addEventListener('change', function () {
+    updateSectionImagePriority(sectionId, image.id, this.value);
+  });
+
+  imageManagement.appendChild(selectBtn);
+  imageManagement.appendChild(deleteBtn);
+  imageManagement.appendChild(sizeDropdown);
+
+  imageThumbnail.appendChild(img);
+  imageDetails.appendChild(imageName);
+  imageDetails.appendChild(imageSize);
+  imageDetails.appendChild(imageManagement);
+
+  imageItem.appendChild(imageThumbnail);
+  imageItem.appendChild(imageDetails);
+  return imageItem;
+}
+
+// Updates the images rendered in a section when an image is added, removed, or updated
+function updateSectionImageList(sectionId) {
+  console.log('updateSectionImageList called');
+  console.log('sectionId: ', sectionId);
+  chrome.storage.local.get(['sections', 'currSectionId'], function (result) {
+    const { sections, currSectionId } = result;
+
+    const currSection = sections[sectionId];
+    const images = currSection.images;
+    const imageList = document.querySelector(
+      `[data-section-id="${sectionId}"].section-image-list`
+    );
+
+    // TODO: update this to the image that is closest to the screen width
+    const currImageId = currSection.currImageId;
+    if (Object.keys(images).length === 0) {
+      imageList.innerHTML = '<p>No images uploaded yet.</p>';
+    } else {
+      imageList.innerHTML = '';
+
+      // Sort images by width first (smallest to largest), then by priority
+      const sortedImageIds = Object.keys(images).sort((a, b) => {
+        // First sort by width (smallest to largest)
+        if (images[a].width !== images[b].width) {
+          return images[a].width - images[b].width;
+        }
+        // If widths are equal, sort by priority (1 is highest priority)
+        return images[a].priority - images[b].priority;
+      });
+
+      sortedImageIds.forEach((img) => {
+        const imageElement = createImageElement(
+          images[img],
+          currSectionId,
+          currImageId === img
+        );
+        imageList.appendChild(imageElement);
+      });
+    }
+  });
+}
+
+function updateImageFromScreenWidth(width) {
+  chrome.storage.local.get(['sections', 'currSectionId'], function (result) {
+    const { sections, currSectionId } = result;
+    if (!sections || !currSectionId) {
+      console.log('no sections or currSectionId');
+      return;
+    }
+    const images = sections[currSectionId].images;
+    let image = null;
+    let matchFound = false;
+    Object.keys(images).forEach((key) => {
+      if (images[key].width === width) {
+        image = images[key];
+        matchFound = true;
+      } else if (!matchFound && images[key].width < width) {
+        image = images[key];
+      } else if (!matchFound && images[key].width > width && image === null) {
+        image = images[key];
+        matchFound = true;
+      }
+    });
+    if (image && matchFound) {
+      sections[currSectionId].currImageId = image.id;
+      chrome.storage.local.set({ sections });
+      // updateImageList();
+    }
+  });
+}
+
+function updateImageOverlay(sectionId, image) {
+  chrome.storage.local.get(['sections'], function (result) {
+    const { sections } = result;
+    sections[sectionId].currImageId = image.id;
+    chrome.storage.local.set({ sections }, function () {
+      updateSectionImageList(sectionId);
+      showSectionUploadResult(sectionId, 'Image selected successfully!');
+    });
+  });
+}
+
+function deleteSectionImage(sectionId, imageId) {
+  chrome.storage.local.get(['sections'], function (result) {
+    const { sections } = result;
+    delete sections[sectionId].images[imageId];
+
+    chrome.storage.local.set(
+      {
+        sections,
+      },
+      function () {
+        updateSectionImageList(sectionId);
+      }
+    );
+  });
+}
+
+function updateSectionImagePriority(sectionId, imageId, newPriority) {
+  chrome.storage.local.get(['sections'], function (result) {
+    const { sections } = result;
+    sections[sectionId].images[imageId].priority = newPriority;
+    chrome.storage.local.set({ sections }, function () {
+      showSectionUploadResult(
+        sectionId,
+        `Image priority updated to ${newPriority}!`
+      );
+      updateSectionImageList(sectionId);
+    });
+  });
+}
+
+// Message updates to user
+function showSectionUploadResult(sectionId, message) {
+  const uploadResult = document.querySelector(
+    `[data-section-id="${sectionId}"] .upload-result`
+  );
+  if (uploadResult) {
+    uploadResult.textContent = message;
+    uploadResult.classList.remove('hidden');
+  }
+}
+
+function clearSectionImages(sectionId) {
+  chrome.storage.local.get(['sections'], function (result) {
+    const { sections } = result;
+    sections[sectionId].images = {};
+    chrome.storage.local.set({ sections }, function () {
+      showSectionUploadResult(sectionId, 'All images cleared successfully!');
+      updateSectionImageList(sectionId);
+    });
+  });
+}
+
+chrome.runtime.onConnect.addListener(function (port) {
+  port.onMessage.addListener(function (msg) {
+    console.log('msg: ', msg);
+    if (port.name === '_quibble') {
+      screenWidthDiv.innerHTML = `<strong>Current width:</strong> ${msg.width}px`;
+      updateImageFromScreenWidth(msg.width);
+    }
+  });
+  return true;
+});
