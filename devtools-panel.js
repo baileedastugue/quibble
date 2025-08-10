@@ -74,23 +74,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     clearSectionErrors();
 
-    let hasErrors = false;
-    if (!sectionName) {
-      hasErrors = true;
-      showSectionError('sectionName', 'Section name is required');
-    }
-    if (!sectionURL) {
-      hasErrors = true;
-      showSectionError('sectionURL', 'Section URL is required');
-    }
-    if (hasErrors) {
-      return;
-    }
-
-    chrome.storage.local.get(['sections', 'currSectionId'], function (result) {
-      const { sections, currSectionId } = result;
+    chrome.storage.local.get(['sections'], function (result) {
+      const { sections } = result;
       let currentSections = sections || {};
-      const isCurrSection = currSectionId === null;
+
+      const hasNameErrors = validateSectionName(sectionName, currentSections);
+      const hasURLErrors = validateSectionURL(sectionURL, currentSections);
+
+      if (hasNameErrors || hasURLErrors) {
+        return;
+      }
+
+      // Proceed with creating the section
+      const isCurrSection =
+        !currentSections || Object.keys(currentSections).length === 0;
       const id = Date.now().toString();
       const newSection = {
         id,
@@ -117,13 +114,59 @@ document.addEventListener('DOMContentLoaded', function () {
 
       chrome.storage.local.set({
         sections: currentSections,
-        currSectionId: isCurrSection ? newSection.id : currSectionId,
+        currSectionId: isCurrSection
+          ? newSection.id
+          : Object.keys(currentSections)[0],
       });
-    });
 
-    // Clear form inputs
-    document.getElementById('sectionName').value = '';
-    document.getElementById('sectionURL').value = '';
+      // Clear form inputs on successful creation
+      document.getElementById('sectionName').value = '';
+      document.getElementById('sectionURL').value = '';
+    });
+  }
+
+  function validateSectionName(sectionName, existingSections) {
+    let hasNameErrors = false;
+
+    if (!sectionName) {
+      showSectionError('sectionName', 'Section name is required');
+      hasNameErrors = true;
+    }
+
+    if (!hasNameErrors) {
+      const existingSectionWithName = Object.values(existingSections).find(
+        (section) => section.name.toLowerCase() === sectionName.toLowerCase()
+      );
+
+      if (existingSectionWithName) {
+        showSectionError('sectionName', 'Section name already exists');
+        hasNameErrors = true;
+      }
+    }
+
+    return hasNameErrors;
+  }
+
+  function validateSectionURL(sectionURL, existingSections) {
+    let hasURLErrors = false;
+
+    if (!sectionURL) {
+      showSectionError('sectionURL', 'Section URL is required');
+      hasURLErrors = true;
+    }
+
+    if (!hasURLErrors) {
+      const existingSectionWithURL = Object.values(existingSections).find(
+        (section) => section.url.toLowerCase() === sectionURL.toLowerCase()
+      );
+
+      if (existingSectionWithURL) {
+        showSectionError('sectionURL', 'Section URL already exists');
+        hasURLErrors = true;
+      }
+    }
+
+    return hasURLErrors;
   }
 
   function showSectionError(fieldId, message) {
