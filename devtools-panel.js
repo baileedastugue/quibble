@@ -34,6 +34,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Function to open a specific section accordion
   function openSectionAccordion(sectionId) {
+    chrome.storage.local.get(['currSectionId'], function (result) {
+      const { currSectionId } = result;
+      if (currSectionId && currSectionId !== sectionId) {
+        closeSectionAccordion(currSectionId);
+      }
+    });
+
     chrome.storage.local.set({ currSectionId: sectionId });
     const sectionHeader = document.querySelector(
       `[data-section-id="${sectionId}"].accordion-header`
@@ -52,9 +59,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function closeSectionAccordion(sectionId) {
-    const sectionHeader = document.querySelector(
-      `[data-section-id="${sectionId}"].accordion-header`
-    );
     const sectionContent = document.querySelector(
       `[data-section-id="${sectionId}"].accordion-content`
     );
@@ -62,10 +66,17 @@ document.addEventListener('DOMContentLoaded', function () {
       `[data-section-id="${sectionId}"].accordion-header .accordion-toggle`
     );
 
-    if (sectionContent && sectionHeader && toggleIcon) {
+    if (sectionContent && toggleIcon) {
       sectionContent.classList.add('collapsed');
       toggleIcon.textContent = '▶';
     }
+
+    chrome.storage.local.get(['currSectionId'], function (result) {
+      const { currSectionId } = result;
+      if (currSectionId === sectionId) {
+        chrome.storage.local.remove(['currSectionId']);
+      }
+    });
   }
 
   function addSection() {
