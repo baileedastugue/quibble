@@ -153,9 +153,6 @@ function addSection() {
       return;
     }
 
-    // Proceed with creating the section
-    const isCurrSection =
-      !currentSections || Object.keys(currentSections).length === 0;
     const id = Date.now().toString();
     const newSection = {
       id,
@@ -166,33 +163,19 @@ function addSection() {
     };
     currentSections[id] = newSection;
 
-    const sectionListContainer = document.getElementById('sectionList');
-    const sectionElement = createSectionAccordion(newSection);
-    sectionListContainer.appendChild(sectionElement);
-
-    // Check if any section URL matches current page and open it
-    chrome.devtools.inspectedWindow.eval(
-      'window.location.href',
-      function (result, isException) {
-        if (!isException && result) {
-          checkAndOpenMatchingSection(result);
-        }
-      }
-    );
-
     chrome.storage.local.set(
       {
         sections: currentSections,
-        currSectionId: isCurrSection
-          ? newSection.id
-          : Object.keys(currentSections)[0],
+        currSectionId: id,
       },
       function () {
-        refreshUI(); // Refresh UI after adding section
+        const sectionListContainer = document.getElementById('sectionList');
+        const sectionElement = createSectionAccordion(newSection);
+        sectionListContainer.appendChild(sectionElement);
+        openSectionAccordion(id);
       }
     );
 
-    // Clear form inputs on successful creation
     document.getElementById('sectionName').value = '';
     document.getElementById('sectionURL').value = '';
   });
@@ -304,16 +287,6 @@ function refreshSectionList() {
       sectionListContainer.appendChild(sectionElement);
       updateSectionImageList(section.id);
     });
-
-    // Check if any section URL matches current page and open it
-    chrome.devtools.inspectedWindow.eval(
-      'window.location.href',
-      function (result, isException) {
-        if (!isException && result) {
-          checkAndOpenMatchingSection(result);
-        }
-      }
-    );
   });
 }
 
