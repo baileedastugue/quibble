@@ -335,6 +335,32 @@ function createSectionAccordion(section) {
   uploadInput.classList.add('hidden');
   uploadInput.setAttribute('data-section-id', section.id);
 
+  const priorityContainer = document.createElement('div');
+  priorityContainer.classList.add('priority-container');
+
+  const priorityLabel = document.createElement('label');
+  priorityLabel.textContent = 'Priority:';
+  priorityLabel.classList.add('priority-label');
+
+  const prioritySelect = document.createElement('select');
+  prioritySelect.classList.add('priority-select');
+  prioritySelect.setAttribute('data-section-id', section.id);
+
+  // Add priority options
+  const priorityOptions = ['1', '2', '3', '4', '5'];
+  priorityOptions.forEach((priority) => {
+    const option = document.createElement('option');
+    option.value = priority;
+    option.textContent = priority;
+    if (priority === '1') {
+      option.selected = true;
+    }
+    prioritySelect.appendChild(option);
+  });
+
+  priorityContainer.appendChild(priorityLabel);
+  priorityContainer.appendChild(prioritySelect);
+
   const uploadBtn = document.createElement('button');
   uploadBtn.textContent = 'Upload Image';
   uploadBtn.classList.add('upload-btn');
@@ -359,6 +385,7 @@ function createSectionAccordion(section) {
   imageList.setAttribute('data-section-id', section.id);
 
   sectionImageUpload.appendChild(uploadInput);
+  sectionImageUpload.appendChild(priorityContainer);
   sectionImageUpload.appendChild(uploadBtn);
   sectionImageUpload.appendChild(clearBtn);
   sectionImageUpload.appendChild(deleteSectionBtn);
@@ -371,7 +398,8 @@ function createSectionAccordion(section) {
   });
 
   uploadInput.addEventListener('change', function (event) {
-    handleSectionImageUpload(event, section.id);
+    const selectedPriority = prioritySelect.value;
+    handleSectionImageUpload(event, section.id, selectedPriority);
   });
 
   clearBtn.addEventListener('click', function () {

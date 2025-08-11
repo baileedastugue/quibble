@@ -1,7 +1,7 @@
 const screenWidthDiv = document.getElementById('screenWidth');
 const priorityOptions = ['1', '2', '3', '4', '5'];
 
-function handleSectionImageUpload(event, sectionId) {
+function handleSectionImageUpload(event, sectionId, priority = 1) {
   const file = event.target.files[0];
   if (!file.type.startsWith('image/')) {
     showSectionUploadResult(sectionId, 'Please select a valid image file.');
@@ -25,7 +25,7 @@ function handleSectionImageUpload(event, sectionId) {
         type: file.type,
         size: file.size,
         data: e.target.result,
-        priority: 1,
+        priority: parseInt(priority),
         width: img.width,
         height: img.height,
         timestamp: new Date().toISOString(),
@@ -127,7 +127,7 @@ function createImageElement(image, sectionId, isCurrImg) {
     const option = document.createElement('option');
     option.value = priority;
     option.textContent = priority;
-    if (image.priority === priority) {
+    if (parseInt(image.priority) === parseInt(priority)) {
       option.selected = true;
     }
     sizeDropdown.appendChild(option);

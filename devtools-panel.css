@@ -384,3 +384,36 @@ input.error {
   min-width: 40px;
   text-align: right;
 }
+
+.priority-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.priority-label {
+  font-size: 12px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.priority-select {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
+  color: #4a5568;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 4px 6px;
+  min-width: 60px;
+}
+
+.priority-select:hover {
+  border-color: #cbd5e0;
+}
+
+.priority-select:focus {
+  border-color: #667eea;
+  outline: none;
+}
