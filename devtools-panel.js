@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
   toggleOverlayBtn.addEventListener('click', toggleImageOverlay);
   transparencySlider.addEventListener('input', handleTransparencyChange);
 
-  // Initialize overlay toggle button state and transparency
   updateOverlayButtonState();
   initializeTransparency();
 
@@ -146,6 +145,11 @@ function addSection() {
     const { sections } = result;
     let currentSections = sections || {};
 
+    const hasLimitErrors = validateSectionLimit(currentSections);
+    if (hasLimitErrors) {
+      return;
+    }
+
     const hasNameErrors = validateSectionName(sectionName, currentSections);
     const hasURLErrors = validateSectionURL(sectionURL, currentSections);
 
@@ -225,6 +229,32 @@ function validateSectionURL(sectionURL, existingSections) {
   return hasURLErrors;
 }
 
+function validateSectionLimit(existingSections) {
+  const maxSections = 5;
+  const currentSectionCount = Object.keys(existingSections).length;
+
+  if (currentSectionCount >= maxSections) {
+    showSectionLimitBanner();
+    return true;
+  }
+  return false;
+}
+
+function showSectionLimitError() {
+  const sectionNameError = document.getElementById('sectionNameError');
+  const sectionNameInput = document.getElementById('sectionName');
+
+  if (sectionNameError) {
+    sectionNameError.textContent =
+      'Maximum of 5 sections allowed. Please delete a section before adding a new one.';
+    sectionNameError.classList.remove('hidden');
+  }
+
+  if (sectionNameInput) {
+    sectionNameInput.classList.add('error');
+  }
+}
+
 function showSectionError(fieldId, message) {
   const errorElement = document.getElementById(fieldId + 'Error');
   const inputElement = document.getElementById(fieldId);
@@ -270,6 +300,7 @@ function deleteSection(sectionId) {
         if (element) {
           element.remove();
         }
+        removeSectionLimitBanner();
       }
     );
   });
@@ -501,4 +532,32 @@ const updateOverlayButtonText = (isOverlayVisible, imagesAvailable) => {
 
 function refreshUI() {
   updateOverlayButtonState();
+}
+
+function showSectionLimitBanner() {
+  const sectionManagementSection = document.querySelector('.section');
+  if (!sectionManagementSection) return;
+
+  removeSectionLimitBanner();
+
+  const banner = document.createElement('div');
+  banner.classList.add('section-limit-banner');
+  banner.innerHTML = `
+    <div class="banner-content">
+      <span class="banner-icon">⚠️</span>
+      <span class="banner-text">Maximum of 5 sections reached. Please delete a section before adding a new one.</span>
+    </div>
+  `;
+
+  sectionManagementSection.insertBefore(
+    banner,
+    sectionManagementSection.firstChild
+  );
+}
+
+function removeSectionLimitBanner() {
+  const existingBanner = document.querySelector('.section-limit-banner');
+  if (existingBanner) {
+    existingBanner.remove();
+  }
 }
