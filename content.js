@@ -111,6 +111,9 @@ function checkStoredImages() {
       img.addEventListener('dblclick', function () {
         this.classList.toggle('focused');
       });
+      img.addEventListener('touchstart', function () {
+        this.classList.toggle('focused');
+      });
 
       const opacity =
         (overlayTransparency !== undefined ? overlayTransparency : 100) / 100;
@@ -137,13 +140,51 @@ function listenForStorageChanges(changes, namespace) {
   return true;
 }
 
-var port = chrome.runtime.connect({ name: '_quibble' });
-window.addEventListener('resize', postWidthMessage);
-window.addEventListener('load', postWidthMessage);
+let port = null;
+let isConnected = false;
+
+function connectPort() {
+  try {
+    port = chrome.runtime.connect({ name: '_quibble' });
+    isConnected = true;
+
+    port.onDisconnect.addListener(function () {
+      console.log('Port disconnected');
+      isConnected = false;
+      setTimeout(connectPort, 1000);
+    });
+
+    postWidthMessage();
+  } catch (error) {
+    console.log('Failed to connect port:', error);
+    isConnected = false;
+    setTimeout(connectPort, 2000);
+  }
+}
 
 function postWidthMessage() {
-  port.postMessage({ width: window.innerWidth });
+  if (isConnected && port) {
+    try {
+      port.postMessage({
+        width: window.innerWidth,
+        pageURL: window.location.href,
+      });
+    } catch (error) {
+      console.log('Error sending message, reconnecting...');
+      isConnected = false;
+      connectPort();
+    }
+  } else {
+    connectPort();
+  }
 }
+
+connectPort();
+
+window.addEventListener('resize', postWidthMessage);
+window.addEventListener('DOMContentLoaded', postWidthMessage);
+window.addEventListener('load', postWidthMessage);
+window.addEventListener('reload', postWidthMessage);
 
 function toggleOverlay(visible) {
   const overlay = document.getElementById('quibble-image-overlay');
@@ -181,10 +222,7 @@ chrome.runtime.onMessage.addListener(function (message) {
   if (action === 'updateTransparency') {
     updateTransparency(transparency);
   }
-});
-
-// Clean up when content script gets disconnected
-chrome.runtime.connect().onDisconnect.addListener(function () {
-  chrome.storage.onChanged.removeListener(listenForStorageChanges);
-  window.removeEventListener('resize', postWidthMessage);
+  if (action === 'getScreenWidth') {
+    postWidthMessage();
+  }
 });

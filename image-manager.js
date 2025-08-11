@@ -285,9 +285,13 @@ function clearSectionImages(sectionId) {
 chrome.runtime.onConnect.addListener(function (port) {
   port.onMessage.addListener(function (msg) {
     if (port.name === '_quibble') {
-      screenWidthDiv.innerHTML = `<strong>Current width:</strong> ${msg.width}px`;
-      updateImageFromScreenWidth(msg.width);
+      handleScreenWidthUpdate(msg.width);
     }
   });
   return true;
 });
+
+function handleScreenWidthUpdate(width) {
+  screenWidthDiv.innerHTML = `<strong>Current width:</strong> ${width}px`;
+  updateImageFromScreenWidth(width);
+}

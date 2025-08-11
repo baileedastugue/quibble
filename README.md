@@ -15,7 +15,6 @@ quibble/
 ├── manifest.json      # Extension configuration
 ├── popup.html         # Popup interface
 ├── popup.js          # Popup functionality
-├── background.js     # Background service worker
 ├── content.js        # Content script for web pages
 ├── styles.css        # Popup styling
 └── README.md         # This file
@@ -38,7 +37,6 @@ quibble/
 
 - **manifest.json**: Defines the extension structure, permissions, and components
 - **popup.html/js**: User interface that appears when clicking the extension icon
-- **background.js**: Service worker that runs in the background
 - **content.js**: Script that runs on web pages to interact with page content
 - **styles.css**: Modern styling for the popup interface
 

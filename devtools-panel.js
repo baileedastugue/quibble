@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   refreshUI();
 
+  requestScreenWidth();
+
   // Listen for storage changes to update UI
   chrome.storage.onChanged.addListener(function (changes, namespace) {
     if (namespace === 'local' && (changes.sections || changes.currSectionId)) {
@@ -45,10 +47,8 @@ function handleTransparencyChange() {
     valueDisplay.textContent = `${transparency}%`;
   }
 
-  // Save transparency value to storage
   chrome.storage.local.set({ overlayTransparency: parseInt(transparency) });
 
-  // Send message to content script to update overlay transparency
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     if (tabs[0]) {
       chrome.tabs.sendMessage(tabs[0].id, {
@@ -283,15 +283,14 @@ function clearSectionErrors() {
 }
 
 function deleteSection(sectionId) {
-  chrome.storage.local.get(['sections'], function (result) {
-    const { sections } = result;
+  chrome.storage.local.get(['sections', 'currSectionId'], function (result) {
+    const { sections, currSectionId } = result;
     delete sections[sectionId];
-
-    // TODO: update currSectionId if it was the deleted section
 
     chrome.storage.local.set(
       {
         sections,
+        currSectionId: currSectionId === sectionId ? null : currSectionId,
       },
       () => {
         const element = document.querySelector(
@@ -462,7 +461,12 @@ function createSectionAccordion(section) {
 chrome.runtime.onConnect.addListener(function (port) {
   port.onMessage.addListener(function (msg) {
     if (port.name === '_quibble') {
-      checkAndOpenMatchingSection(msg.pageURL);
+      if (msg.pageURL) {
+        checkAndOpenMatchingSection(msg.pageURL);
+      }
+      if (msg.width) {
+        handleScreenWidthUpdate(msg.width);
+      }
     }
   });
   return true;
@@ -560,4 +564,14 @@ function removeSectionLimitBanner() {
   if (existingBanner) {
     existingBanner.remove();
   }
+}
+
+function requestScreenWidth() {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    if (tabs[0]) {
+      chrome.tabs.sendMessage(tabs[0].id, {
+        action: 'getScreenWidth',
+      });
+    }
+  });
 }
