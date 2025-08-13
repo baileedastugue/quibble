@@ -62,6 +62,35 @@ function addImageToSection(sectionId, image) {
   return false;
 }
 
+function createImageNameElement(image, sectionId) {
+  const imageNameContainer = document.createElement('div');
+  imageNameContainer.classList.add(
+    'flex-row',
+    'justify-space-between',
+    'align-items-center',
+    'image-name-container'
+  );
+  imageNameContainer.setAttribute('data-id', image.id);
+
+  const imageName = document.createElement('p');
+  imageName.classList.add('flex-1');
+  imageName.textContent = image.name;
+
+  const editButton = document.createElement('button');
+  editButton.classList.add('btn-primary--icon', 'btn-sm');
+  editButton.innerHTML = '✏️';
+  editButton.title = 'Edit image name';
+
+  editButton.addEventListener('click', function () {
+    startImageNameEdit(imageNameContainer, image, sectionId);
+  });
+
+  imageNameContainer.appendChild(imageName);
+  imageNameContainer.appendChild(editButton);
+
+  return imageNameContainer;
+}
+
 function createImageElement(image, sectionId, isCurrImg) {
   const imageItem = document.createElement('div');
   imageItem.classList.add('image-item');
@@ -76,8 +105,7 @@ function createImageElement(image, sectionId, isCurrImg) {
   const imageDetails = document.createElement('div');
   imageDetails.classList.add('image-details');
 
-  const imageName = document.createElement('p');
-  imageName.textContent = image.name;
+  const imageNameContainer = createImageNameElement(image, sectionId);
 
   const imageSize = document.createElement('p');
   imageSize.classList.add('image-size');
@@ -137,13 +165,101 @@ function createImageElement(image, sectionId, isCurrImg) {
   imageManagement.appendChild(sizeDropdown);
 
   imageThumbnail.appendChild(img);
-  imageDetails.appendChild(imageName);
+  imageDetails.appendChild(imageNameContainer);
   imageDetails.appendChild(imageSize);
   imageDetails.appendChild(imageManagement);
 
   imageItem.appendChild(imageThumbnail);
   imageItem.appendChild(imageDetails);
   return imageItem;
+}
+
+// Function to start inline editing of image name
+function startImageNameEdit(container, image, sectionId) {
+  const currentName = image.name;
+  const editForm = document.createElement('div');
+  editForm.classList.add('image-name-edit-form');
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = currentName;
+  input.classList.add('image-name-input');
+
+  const buttonContainer = document.createElement('div');
+  buttonContainer.classList.add('edit-buttons', 'flex-row', 'gap-xs');
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.classList.add('btn-success', 'btn-sm');
+  confirmBtn.innerHTML = '✓';
+  confirmBtn.title = 'Confirm changes';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.classList.add('btn-danger--secondary', 'btn-sm');
+  cancelBtn.innerHTML = '✕';
+  cancelBtn.title = 'Cancel changes';
+
+  buttonContainer.appendChild(confirmBtn);
+  buttonContainer.appendChild(cancelBtn);
+
+  editForm.appendChild(input);
+  editForm.appendChild(buttonContainer);
+
+  // Replace the display with edit form
+  container.innerHTML = '';
+  container.appendChild(editForm);
+
+  // Focus the input
+  input.focus();
+  input.select();
+
+  confirmBtn.addEventListener('click', function () {
+    const newName = input.value.trim();
+    if (newName && newName !== currentName) {
+      // Update the image object immediately for instant UI feedback
+      image.name = newName;
+
+      // Update storage in the background
+      updateImageName(sectionId, image.id, newName);
+    }
+
+    // Restore display immediately
+    restoreImageNameDisplay(container, image, sectionId);
+  });
+
+  cancelBtn.addEventListener('click', function () {
+    restoreImageNameDisplay(container, image, sectionId);
+  });
+
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      confirmBtn.click();
+    } else if (e.key === 'Escape') {
+      cancelBtn.click();
+    }
+  });
+}
+
+function restoreImageNameDisplay(container, image, sectionId) {
+  const newImageNameElement = createImageNameElement(image, sectionId);
+  container.innerHTML = newImageNameElement.innerHTML;
+}
+
+function updateImageName(sectionId, imageId, newName) {
+  chrome.storage.local.get(['sections'], function (result) {
+    const { sections } = result;
+    if (sections[sectionId] && sections[sectionId].images[imageId]) {
+      sections[sectionId].images[imageId].name = newName;
+
+      chrome.storage.local.set({ sections }, function () {
+        // Update the overlay if this is the current image
+        chrome.storage.local.get(['currSectionId'], function (result) {
+          if (result.currSectionId === sectionId) {
+            updateImageOverlay(sectionId, sections[sectionId].images[imageId]);
+          }
+        });
+      });
+    }
+  });
 }
 
 // Updates the images rendered in a section when an image is added, removed, or updated
