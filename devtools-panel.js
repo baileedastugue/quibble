@@ -404,19 +404,23 @@ function createSectionAccordion(section) {
   const sectionButtonContainer = document.createElement('div');
   sectionButtonContainer.classList.add(
     'flex-row',
-    'gap-xl',
-    'align-content-end',
+    'align-content-center',
+    'gap-md',
     'full-width'
   );
 
   const clearBtn = document.createElement('button');
-  clearBtn.textContent = 'Clear section images';
-  clearBtn.classList.add('btn-secondary', 'align-self-end');
+  clearBtn.textContent = 'Clear section';
+  clearBtn.classList.add('btn-secondary', 'align-self-end', 'full-width');
   clearBtn.setAttribute('data-section-id', section.id);
 
   const deleteSectionBtn = document.createElement('button');
   deleteSectionBtn.textContent = 'Delete section';
-  deleteSectionBtn.classList.add('btn-danger--secondary', 'align-self-end');
+  deleteSectionBtn.classList.add(
+    'btn-danger--secondary',
+    'align-self-end',
+    'full-width'
+  );
   deleteSectionBtn.setAttribute('data-section-id', section.id);
 
   sectionButtonContainer.appendChild(clearBtn);
