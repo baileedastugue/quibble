@@ -3,40 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <title>Quibble</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton+SC&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="devtools-reset.css">
     <link rel="stylesheet" href="devtools-panel.css">
 </head>
 <body>
-    <div class="container">
+    <div class="flex-col gap-xl">
         <h1>Quibble</h1>
-        <div class="section">
-            <h2>Section management</h2>
-            <div class="input-row">
-                <div class="input-group">
-                    <input type="text" id="sectionName" placeholder="Section name">
-                    <div id="sectionNameError" class="error-message hidden"></div>
+        <div class="flex-col gap-md">
+            <h2>Create new section</h2>
+            <div class="flex-col gap-lg">
+                <div class="flex-col gap-sm">
+                    <label for="sectionName">Name
+                        <input type="text" id="sectionName">
+                    </label>
+                    <p id="sectionNameError" class="error-message hidden"></p>
                 </div>
-                <div class="input-group">
-                    <input type="text" id="sectionURL" placeholder="URL for section">
-                    <div id="sectionURLError" class="error-message hidden"></div>
+                <div class="flex-col gap-sm">
+                    <label for="sectionURL">URL
+                        <input type="text" id="sectionURL">
+                    </label>
+                    <p id="sectionURLError" class="error-message hidden"></p>
                 </div>
-                <button id="addSection">Add Section</button>
+                <button id="addSection" class="align-self-end">Add section</button>
             </div>
         </div>
-        <div class="section">
-            <h2>Page information</h2>
-            <div id="screenWidth" class="screen-info">Screen width: </div>
-            <div class="overlay-controls">
-                <button id="toggleOverlay" class="overlay-toggle">Hide Overlay</button>
-                <div class="transparency-control">
-                    <label for="transparencySlider">Transparency:</label>
-                    <input type="range" id="transparencySlider" min="20" max="100" value="100">
-                    <span id="transparencyValue">100%</span>
+        <div class="flex-col gap-md">
+            <h2>Overlay preferences</h2>
+            <button id="toggleOverlay" class=" overlay-toggle">Hide overlay</button>
+            <div class="flex-col gap-sm align-self-start full-width">
+                <div class="flex-row justify-space-between">
+                    <label for="transparencySlider">Transparency:
+                    </label>
+                    <p class="transparency-value">100%</p>
                 </div>
+                <input class="transparency-slider" type="range" id="transparencySlider" min="20" max="100" value="100">
             </div>
         </div>
-        <div id="sectionList"></div>
-    </div>
+        <div id="sectionList" class="flex-col gap-md">
+            <h2>Sections</h2>
+        </div>
+</div>
     
     <script src="image-manager.js"></script>
     <script src="devtools-panel.js"></script>

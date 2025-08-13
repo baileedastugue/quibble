@@ -1,4 +1,3 @@
-const screenWidthDiv = document.getElementById('screenWidth');
 const priorityOptions = ['1', '2', '3', '4', '5'];
 
 function handleSectionImageUpload(event, sectionId, priority = 1) {
@@ -65,7 +64,7 @@ function addImageToSection(sectionId, image) {
 
 function createImageElement(image, sectionId, isCurrImg) {
   const imageItem = document.createElement('div');
-  imageItem.classList.add('section-image-item', 'image-item');
+  imageItem.classList.add('image-item');
 
   const imageThumbnail = document.createElement('div');
   imageThumbnail.classList.add('image-thumbnail');
@@ -77,25 +76,22 @@ function createImageElement(image, sectionId, isCurrImg) {
   const imageDetails = document.createElement('div');
   imageDetails.classList.add('image-details');
 
-  const imageName = document.createElement('span');
-  imageName.classList.add('image-name');
+  const imageName = document.createElement('p');
   imageName.textContent = image.name;
 
-  const imageSize = document.createElement('span');
+  const imageSize = document.createElement('p');
   imageSize.classList.add('image-size');
-  imageSize.textContent = `${(image.size / 1024).toFixed(1)} KB | ${
-    image.width
-  }px`;
+  imageSize.textContent = `${image.width}px`;
 
   const imageManagement = document.createElement('div');
   imageManagement.classList.add('image-management');
 
   const selectBtn = document.createElement('button');
-  selectBtn.classList.add('select-btn');
+  selectBtn.classList.add('btn-sm');
   selectBtn.setAttribute('data-id', image.id);
   selectBtn.setAttribute('data-section-id', sectionId);
-  selectBtn.textContent = isCurrImg ? 'Current' : 'Select';
-  selectBtn.classList.add(isCurrImg ? 'selected' : 'unselected');
+  selectBtn.textContent = isCurrImg ? 'Current image' : 'Select image';
+  selectBtn.classList.add(isCurrImg && 'btn-current');
 
   selectBtn.addEventListener('click', function () {
     chrome.storage.local.get(['sections', 'currSectionId'], function (result) {
@@ -109,16 +105,15 @@ function createImageElement(image, sectionId, isCurrImg) {
   });
 
   const deleteBtn = document.createElement('button');
-  deleteBtn.classList.add('delete-btn');
+  deleteBtn.classList.add('btn-danger--secondary', 'btn-sm');
   deleteBtn.setAttribute('data-id', image.id);
   deleteBtn.setAttribute('data-section-id', sectionId);
-  deleteBtn.textContent = 'Delete';
+  deleteBtn.textContent = 'Delete image';
   deleteBtn.addEventListener('click', function () {
     deleteSectionImage(sectionId, image.id);
   });
 
   const sizeDropdown = document.createElement('select');
-  sizeDropdown.classList.add('size-dropdown');
   sizeDropdown.setAttribute('data-id', image.id);
   sizeDropdown.setAttribute('data-section-id', sectionId);
 
@@ -285,13 +280,8 @@ function clearSectionImages(sectionId) {
 chrome.runtime.onConnect.addListener(function (port) {
   port.onMessage.addListener(function (msg) {
     if (port.name === '_quibble') {
-      handleScreenWidthUpdate(msg.width);
+      updateImageFromScreenWidth(msg.width);
     }
   });
   return true;
 });
-
-function handleScreenWidthUpdate(width) {
-  screenWidthDiv.innerHTML = `<strong>Current width:</strong> ${width}px`;
-  updateImageFromScreenWidth(width);
-}

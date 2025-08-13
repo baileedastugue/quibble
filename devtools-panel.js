@@ -322,28 +322,28 @@ function refreshSectionList() {
 
 function createSectionAccordion(section) {
   const sectionItem = document.createElement('div');
-  sectionItem.classList.add('section-item', 'accordion');
+  sectionItem.classList.add('section-item', 'accordion', 'card');
   sectionItem.setAttribute('data-section-id', section.id);
 
   // Section header (clickable for accordion)
   const sectionHeader = document.createElement('div');
-  sectionHeader.classList.add('section-header', 'accordion-header');
+  sectionHeader.classList.add(
+    'flex-row',
+    'justify-space-between',
+    'align-self-center',
+    'accordion-header'
+  );
   sectionHeader.setAttribute('data-section-id', section.id);
 
-  const sectionName = document.createElement('span');
+  const sectionName = document.createElement('h3');
   sectionName.classList.add('section-name');
   sectionName.textContent = section.name;
-
-  const sectionUrl = document.createElement('span');
-  sectionUrl.classList.add('section-url');
-  sectionUrl.textContent = section.url;
 
   const toggleIcon = document.createElement('span');
   toggleIcon.classList.add('accordion-toggle');
   toggleIcon.textContent = '▶';
 
   sectionHeader.appendChild(sectionName);
-  sectionHeader.appendChild(sectionUrl);
   sectionHeader.appendChild(toggleIcon);
 
   // Section content (collapsible)
@@ -351,13 +351,14 @@ function createSectionAccordion(section) {
   sectionContent.classList.add(
     'section-content',
     'accordion-content',
-    'collapsed'
+    'collapsed',
+    'flex-col',
+    'gap-md'
   );
   sectionContent.setAttribute('data-section-id', section.id);
 
-  // Section image upload
-  const sectionImageUpload = document.createElement('div');
-  sectionImageUpload.classList.add('section-image-upload');
+  const sectionUrl = document.createElement('p');
+  sectionUrl.textContent = `URL: ${section.url}`;
 
   const uploadInput = document.createElement('input');
   uploadInput.type = 'file';
@@ -365,15 +366,16 @@ function createSectionAccordion(section) {
   uploadInput.classList.add('hidden');
   uploadInput.setAttribute('data-section-id', section.id);
 
+  const imageUploadContainer = document.createElement('div');
+  imageUploadContainer.classList.add('flex-row', 'justify-space-between');
+
   const priorityContainer = document.createElement('div');
-  priorityContainer.classList.add('priority-container');
+  priorityContainer.classList.add('flex-row', 'gap-sm');
 
   const priorityLabel = document.createElement('label');
   priorityLabel.textContent = 'Priority:';
-  priorityLabel.classList.add('priority-label');
 
   const prioritySelect = document.createElement('select');
-  prioritySelect.classList.add('priority-select');
   prioritySelect.setAttribute('data-section-id', section.id);
 
   // Add priority options
@@ -392,19 +394,33 @@ function createSectionAccordion(section) {
   priorityContainer.appendChild(prioritySelect);
 
   const uploadBtn = document.createElement('button');
-  uploadBtn.textContent = 'Upload Image';
-  uploadBtn.classList.add('upload-btn');
+  uploadBtn.textContent = 'Add new image';
+  uploadBtn.classList.add('btn-primary', 'btn-sm');
   uploadBtn.setAttribute('data-section-id', section.id);
 
+  imageUploadContainer.appendChild(priorityContainer);
+  imageUploadContainer.appendChild(uploadBtn);
+
+  const sectionButtonContainer = document.createElement('div');
+  sectionButtonContainer.classList.add(
+    'flex-row',
+    'gap-xl',
+    'align-content-end',
+    'full-width'
+  );
+
   const clearBtn = document.createElement('button');
-  clearBtn.textContent = 'Clear Images';
-  clearBtn.classList.add('clear-btn');
+  clearBtn.textContent = 'Clear section images';
+  clearBtn.classList.add('btn-secondary', 'align-self-end');
   clearBtn.setAttribute('data-section-id', section.id);
 
   const deleteSectionBtn = document.createElement('button');
-  deleteSectionBtn.textContent = 'Delete Section';
-  deleteSectionBtn.classList.add('delete-section-btn');
+  deleteSectionBtn.textContent = 'Delete section';
+  deleteSectionBtn.classList.add('btn-danger--secondary', 'align-self-end');
   deleteSectionBtn.setAttribute('data-section-id', section.id);
+
+  sectionButtonContainer.appendChild(clearBtn);
+  sectionButtonContainer.appendChild(deleteSectionBtn);
 
   const uploadResult = document.createElement('div');
   uploadResult.classList.add('upload-result', 'hidden');
@@ -414,13 +430,12 @@ function createSectionAccordion(section) {
   imageList.classList.add('section-image-list');
   imageList.setAttribute('data-section-id', section.id);
 
-  sectionImageUpload.appendChild(uploadInput);
-  sectionImageUpload.appendChild(priorityContainer);
-  sectionImageUpload.appendChild(uploadBtn);
-  sectionImageUpload.appendChild(clearBtn);
-  sectionImageUpload.appendChild(deleteSectionBtn);
-  sectionImageUpload.appendChild(uploadResult);
-  sectionImageUpload.appendChild(imageList);
+  sectionContent.appendChild(sectionUrl);
+  sectionContent.appendChild(sectionButtonContainer);
+  sectionContent.appendChild(uploadInput);
+  sectionContent.appendChild(imageUploadContainer);
+  sectionContent.appendChild(uploadResult);
+  sectionContent.appendChild(imageList);
 
   // Add event listeners
   uploadBtn.addEventListener('click', function () {
@@ -451,7 +466,6 @@ function createSectionAccordion(section) {
     }
   });
 
-  sectionContent.appendChild(sectionImageUpload);
   sectionItem.appendChild(sectionHeader);
   sectionItem.appendChild(sectionContent);
 
