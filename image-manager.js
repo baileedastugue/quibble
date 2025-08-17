@@ -1,4 +1,8 @@
 const priorityOptions = ['1', '2', '3', '4', '5'];
+const DELETE_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"> <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
+const EDIT_ICON = `<svg width="20" height="20" focusable="false" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.46v3.04c0 .28.22.5.5.5h3.04c.13 0 .26-.05.35-.15L17.81 9.94l-3.75-3.75L3.15 17.1q-.15.15-.15.36M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z"></path></svg>`;
+const CHECK_ICON = `<svg width="20" height="20" focusable="false" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17 5.53 12.7a.996.996 0 0 0-1.41 0c-.39.39-.39 1.02 0 1.41l4.18 4.18c.39.39 1.02.39 1.41 0L20.29 7.71c.39-.39.39-1.02 0-1.41a.996.996 0 0 0-1.41 0z"></path></svg>`;
+const CLOSE_ICON = `<svg width="20" height="20" focusable="false" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24"><path d="M18.3 5.71a.996.996 0 0 0-1.41 0L12 10.59 7.11 5.7a.996.996 0 0 0-1.41 0c-.39.39-.39 1.02 0 1.41L10.59 12 5.7 16.89c-.39.39-.39 1.02 0 1.41s1.02.39 1.41 0L12 13.41l4.89 4.89c.39.39 1.02.39 1.41 0s.39-1.02 0-1.41L13.41 12l4.89-4.89c.38-.38.38-1.02 0-1.4"></path></svg>`;
 
 function handleSectionImageUpload(event, sectionId, priority = 1) {
   const file = event.target.files[0];
@@ -68,7 +72,8 @@ function createImageNameElement(image, sectionId) {
     'flex-row',
     'justify-space-between',
     'align-items-center',
-    'image-name-container'
+    'image-name-container',
+    'gap-sm'
   );
   imageNameContainer.setAttribute('data-id', image.id);
 
@@ -77,8 +82,8 @@ function createImageNameElement(image, sectionId) {
   imageName.textContent = image.name;
 
   const editButton = document.createElement('button');
-  editButton.classList.add('btn-primary--icon', 'btn-sm');
-  editButton.innerHTML = '✏️';
+  editButton.classList.add('btn-icon', 'btn-primary--icon');
+  editButton.innerHTML = EDIT_ICON;
   editButton.title = 'Edit image name';
 
   editButton.addEventListener('click', function () {
@@ -91,35 +96,21 @@ function createImageNameElement(image, sectionId) {
   return imageNameContainer;
 }
 
-function createImageElement(image, sectionId, isCurrImg) {
-  const imageItem = document.createElement('div');
-  imageItem.classList.add('image-item');
-
+function createImageThumbnail(image, sectionId, isCurrImg) {
   const imageThumbnail = document.createElement('div');
-  imageThumbnail.classList.add('image-thumbnail');
+  imageThumbnail.classList.add('image-thumbnail', 'full-width');
+
+  const selectBtn = document.createElement('button');
+  selectBtn.classList.add('btn-img');
+  selectBtn.setAttribute('data-id', image.id);
+  selectBtn.setAttribute('data-section-id', sectionId);
+  selectBtn.classList.add(isCurrImg && 'btn-current');
 
   const img = document.createElement('img');
   img.src = image.data;
   img.alt = image.name;
-
-  const imageDetails = document.createElement('div');
-  imageDetails.classList.add('image-details');
-
-  const imageNameContainer = createImageNameElement(image, sectionId);
-
-  const imageSize = document.createElement('p');
-  imageSize.classList.add('image-size');
-  imageSize.textContent = `${image.width}px`;
-
-  const imageManagement = document.createElement('div');
-  imageManagement.classList.add('image-management');
-
-  const selectBtn = document.createElement('button');
-  selectBtn.classList.add('btn-sm');
-  selectBtn.setAttribute('data-id', image.id);
-  selectBtn.setAttribute('data-section-id', sectionId);
-  selectBtn.textContent = isCurrImg ? 'Current image' : 'Select image';
-  selectBtn.classList.add(isCurrImg && 'btn-current');
+  selectBtn.appendChild(img);
+  imageThumbnail.appendChild(selectBtn);
 
   selectBtn.addEventListener('click', function () {
     chrome.storage.local.get(['sections', 'currSectionId'], function (result) {
@@ -132,20 +123,28 @@ function createImageElement(image, sectionId, isCurrImg) {
     });
   });
 
+  return imageThumbnail;
+}
+
+const createImageDeleteButton = (image, sectionId) => {
   const deleteBtn = document.createElement('button');
-  deleteBtn.classList.add('btn-danger--secondary', 'btn-sm');
+  deleteBtn.classList.add('btn-danger--icon', 'btn-icon');
   deleteBtn.setAttribute('data-id', image.id);
   deleteBtn.setAttribute('data-section-id', sectionId);
-  deleteBtn.textContent = 'Delete image';
+  deleteBtn.innerHTML = DELETE_ICON;
+  deleteBtn.title = 'Delete image';
   deleteBtn.addEventListener('click', function () {
     deleteSectionImage(sectionId, image.id);
   });
 
-  const sizeDropdown = document.createElement('select');
-  sizeDropdown.setAttribute('data-id', image.id);
-  sizeDropdown.setAttribute('data-section-id', sectionId);
+  return deleteBtn;
+};
 
-  // Add priority options
+const createImagePriorityDropdown = (image, sectionId) => {
+  const priorityDropdown = document.createElement('select');
+  priorityDropdown.setAttribute('data-id', image.id);
+  priorityDropdown.setAttribute('data-section-id', sectionId);
+
   priorityOptions.forEach((priority) => {
     const option = document.createElement('option');
     option.value = priority;
@@ -153,49 +152,71 @@ function createImageElement(image, sectionId, isCurrImg) {
     if (parseInt(image.priority) === parseInt(priority)) {
       option.selected = true;
     }
-    sizeDropdown.appendChild(option);
+    priorityDropdown.appendChild(option);
   });
 
-  sizeDropdown.addEventListener('change', function () {
+  priorityDropdown.addEventListener('change', function () {
     updateSectionImagePriority(sectionId, image.id, this.value);
   });
+};
 
-  imageManagement.appendChild(selectBtn);
-  imageManagement.appendChild(deleteBtn);
-  imageManagement.appendChild(sizeDropdown);
+function createImageElement(image, sectionId, isCurrImg) {
+  const imageItem = document.createElement('div');
+  imageItem.classList.add('image-item', 'flex-col', 'gap-md', 'flex-row--md');
 
-  imageThumbnail.appendChild(img);
-  imageDetails.appendChild(imageNameContainer);
-  imageDetails.appendChild(imageSize);
-  imageDetails.appendChild(imageManagement);
+  const imageThumbnail = createImageThumbnail(image, sectionId, isCurrImg);
+
+  const imageDetails = document.createElement('div');
+  imageDetails.classList.add('image-details', 'full-width');
+
+  const imageName = createImageNameElement(image, sectionId);
+
+  const imageSizeAndDelete = document.createElement('div');
+  imageSizeAndDelete.classList.add(
+    'image-management',
+    'flex-row',
+    'gap-md',
+    'justify-space-between',
+    'align-items-center',
+    'full-width'
+  );
+  const imageSize = document.createElement('p');
+  imageSize.textContent = `${image.width}px`;
+  const deleteBtn = createImageDeleteButton(image, sectionId);
+  imageSizeAndDelete.appendChild(imageSize);
+  imageSizeAndDelete.appendChild(deleteBtn);
+
+  // const imagePriorityDropdown = createImagePriorityDropdown(image, sectionId);
+
+  imageDetails.appendChild(imageName);
+  imageDetails.appendChild(imageSizeAndDelete);
 
   imageItem.appendChild(imageThumbnail);
   imageItem.appendChild(imageDetails);
   return imageItem;
 }
 
-// Function to start inline editing of image name
 function startImageNameEdit(container, image, sectionId) {
   const currentName = image.name;
   const editForm = document.createElement('div');
-  editForm.classList.add('image-name-edit-form');
+  editForm.classList.add('image-name-edit-form', 'flex-col');
 
   const input = document.createElement('input');
   input.type = 'text';
   input.value = currentName;
-  input.classList.add('image-name-input');
+  input.classList.add('image-name-input', 'full-width');
 
   const buttonContainer = document.createElement('div');
   buttonContainer.classList.add('edit-buttons', 'flex-row', 'gap-xs');
 
   const confirmBtn = document.createElement('button');
-  confirmBtn.classList.add('btn-success', 'btn-sm');
-  confirmBtn.innerHTML = '✓';
+  confirmBtn.classList.add('btn-icon', 'btn-primary--icon', 'btn-icon--sm');
+  confirmBtn.innerHTML = CHECK_ICON;
   confirmBtn.title = 'Confirm changes';
 
   const cancelBtn = document.createElement('button');
-  cancelBtn.classList.add('btn-danger--secondary', 'btn-sm');
-  cancelBtn.innerHTML = '✕';
+  cancelBtn.classList.add('btn-icon', 'btn-danger--icon', 'btn-icon--sm');
+  cancelBtn.innerHTML = CLOSE_ICON;
   cancelBtn.title = 'Cancel changes';
 
   buttonContainer.appendChild(confirmBtn);
@@ -204,11 +225,9 @@ function startImageNameEdit(container, image, sectionId) {
   editForm.appendChild(input);
   editForm.appendChild(buttonContainer);
 
-  // Replace the display with edit form
   container.innerHTML = '';
   container.appendChild(editForm);
 
-  // Focus the input
   input.focus();
   input.select();
 
@@ -241,7 +260,12 @@ function startImageNameEdit(container, image, sectionId) {
 
 function restoreImageNameDisplay(container, image, sectionId) {
   const newImageNameElement = createImageNameElement(image, sectionId);
-  container.innerHTML = newImageNameElement.innerHTML;
+
+  container.innerHTML = '';
+
+  while (newImageNameElement.firstChild) {
+    container.appendChild(newImageNameElement.firstChild);
+  }
 }
 
 function updateImageName(sectionId, imageId, newName) {
@@ -279,15 +303,16 @@ function updateSectionImageList(sectionId) {
       imageList.innerHTML = '<p>No images uploaded yet.</p>';
     } else {
       imageList.innerHTML = '';
+      imageList.classList.add('flex-col', 'gap-lg');
 
       // Sort images by width first (smallest to largest), then by priority
       const sortedImageIds = Object.keys(images).sort((a, b) => {
         // First sort by width (smallest to largest)
-        if (images[a].width !== images[b].width) {
-          return images[a].width - images[b].width;
-        }
+        // if (images[a].width !== images[b].width) {
+        return images[a].width - images[b].width;
+        // }
         // If widths are equal, sort by priority (1 is highest priority)
-        return images[a].priority - images[b].priority;
+        // return images[a].priority - images[b].priority;
       });
 
       sortedImageIds.forEach((img) => {
@@ -336,7 +361,7 @@ function updateImageOverlay(sectionId, image) {
     sections[sectionId].currImageId = image.id;
     chrome.storage.local.set({ sections }, function () {
       updateSectionImageList(sectionId);
-      showSectionUploadResult(sectionId, 'Image selected successfully!');
+      // showSectionUploadResult(sectionId, 'Image selected successfully!');
     });
   });
 }
@@ -357,19 +382,19 @@ function deleteSectionImage(sectionId, imageId) {
   });
 }
 
-function updateSectionImagePriority(sectionId, imageId, newPriority) {
-  chrome.storage.local.get(['sections'], function (result) {
-    const { sections } = result;
-    sections[sectionId].images[imageId].priority = newPriority;
-    chrome.storage.local.set({ sections }, function () {
-      showSectionUploadResult(
-        sectionId,
-        `Image priority updated to ${newPriority}!`
-      );
-      updateSectionImageList(sectionId);
-    });
-  });
-}
+// function updateSectionImagePriority(sectionId, imageId, newPriority) {
+//   chrome.storage.local.get(['sections'], function (result) {
+//     const { sections } = result;
+//     sections[sectionId].images[imageId].priority = newPriority;
+//     chrome.storage.local.set({ sections }, function () {
+//       showSectionUploadResult(
+//         sectionId,
+//         `Image priority updated to ${newPriority}!`
+//       );
+//       updateSectionImageList(sectionId);
+//     });
+//   });
+// }
 
 // Message updates to user
 function showSectionUploadResult(sectionId, message) {
@@ -387,7 +412,7 @@ function clearSectionImages(sectionId) {
     const { sections } = result;
     sections[sectionId].images = {};
     chrome.storage.local.set({ sections }, function () {
-      showSectionUploadResult(sectionId, 'All images cleared successfully!');
+      // showSectionUploadResult(sectionId, 'All images cleared successfully!');
       updateSectionImageList(sectionId);
     });
   });

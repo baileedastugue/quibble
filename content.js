@@ -151,7 +151,7 @@ function connectPort() {
     port.onDisconnect.addListener(function () {
       console.log('Port disconnected');
       isConnected = false;
-      setTimeout(connectPort, 1000);
+      // setTimeout(connectPort, 1000);
     });
 
     postWidthMessage();
