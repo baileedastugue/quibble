@@ -365,7 +365,8 @@ input[type='file'] {
 .image-thumbnail {
   height: auto;
   width: 100%;
-  align-self: center;
+  display: flex;
+  justify-content: center;
 }
 
 .image-thumbnail img {
