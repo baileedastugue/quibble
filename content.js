@@ -1,6 +1,3 @@
-// Content script that runs in the context of web pages
-console.log('Quibble Extension content script loaded');
-
 // Function to display uploaded image overlay
 function displayUploadedImage() {
   // Remove any existing image overlay
@@ -148,14 +145,12 @@ function connectPort() {
     isConnected = true;
 
     port.onDisconnect.addListener(function () {
-      console.log('Port disconnected');
       isConnected = false;
       // setTimeout(connectPort, 1000);
     });
 
     postWidthMessage();
   } catch (error) {
-    console.log('Failed to connect port:', error);
     isConnected = false;
     setTimeout(connectPort, 2000);
   }
@@ -169,7 +164,6 @@ function postWidthMessage() {
         pageURL: window.location.href,
       });
     } catch (error) {
-      console.log('Error sending message, reconnecting...');
       isConnected = false;
       connectPort();
     }
