@@ -33,6 +33,11 @@ h1 {
   font-weight: 700;
 }
 
+.header-icon {
+  width: 24px;
+  height: 24px;
+}
+
 h2 {
   font-size: 20px;
 }
