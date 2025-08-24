@@ -52,6 +52,9 @@ function addImageToSection(sectionId, image) {
       [image.id]: image,
     };
 
+    // Automatically set the newly uploaded image as the current image
+    sections[sectionId].currImageId = image.id;
+
     chrome.storage.local.set({ sections }, function () {
       updateSectionImageList(sectionId);
       return true;
