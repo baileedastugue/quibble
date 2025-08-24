@@ -90,12 +90,15 @@ function normalizeURL(url) {
   return normalized.toLowerCase();
 }
 
-// Function to open a specific section accordion
 function openSectionAccordion(sectionId) {
-  chrome.storage.local.get(['currSectionId'], function (result) {
-    const { currSectionId } = result;
-    if (currSectionId && currSectionId !== sectionId) {
-      closeSectionAccordion(currSectionId);
+  chrome.storage.local.get(['sections'], function (result) {
+    const { sections } = result;
+    if (sections) {
+      Object.keys(sections).forEach((id) => {
+        if (id !== sectionId) {
+          closeSectionAccordion(id);
+        }
+      });
     }
   });
 
