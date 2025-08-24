@@ -65,7 +65,6 @@ function imageDragFunctionality(overlay, img) {
 
   document.addEventListener('touchmove', function (e) {
     if (isDragging) {
-      e.preventDefault();
       currentX = e.touches[0].clientX - initialX;
       currentY = e.touches[0].clientY - initialY;
       xOffset = currentX;
