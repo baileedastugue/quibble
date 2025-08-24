@@ -53,12 +53,6 @@ function addImageToSection(sectionId, image) {
     };
 
     chrome.storage.local.set({ sections }, function () {
-      showSectionUploadResult(
-        sectionId,
-        `Image uploaded successfully! (${
-          Object.keys(sections[sectionId].images).length
-        } total)`
-      );
       updateSectionImageList(sectionId);
       return true;
     });
@@ -186,8 +180,6 @@ function createImageElement(image, sectionId, isCurrImg) {
   imageSizeAndDelete.appendChild(imageSize);
   imageSizeAndDelete.appendChild(deleteBtn);
 
-  // const imagePriorityDropdown = createImagePriorityDropdown(image, sectionId);
-
   imageDetails.appendChild(imageName);
   imageDetails.appendChild(imageSizeAndDelete);
 
@@ -234,14 +226,11 @@ function startImageNameEdit(container, image, sectionId) {
   confirmBtn.addEventListener('click', function () {
     const newName = input.value.trim();
     if (newName && newName !== currentName) {
-      // Update the image object immediately for instant UI feedback
       image.name = newName;
 
-      // Update storage in the background
       updateImageName(sectionId, image.id, newName);
     }
 
-    // Restore display immediately
     restoreImageNameDisplay(container, image, sectionId);
   });
 
@@ -304,15 +293,8 @@ function updateSectionImageList(sectionId) {
     } else {
       imageList.innerHTML = '';
       imageList.classList.add('flex-col', 'gap-lg');
-
-      // Sort images by width first (smallest to largest), then by priority
       const sortedImageIds = Object.keys(images).sort((a, b) => {
-        // First sort by width (smallest to largest)
-        // if (images[a].width !== images[b].width) {
         return images[a].width - images[b].width;
-        // }
-        // If widths are equal, sort by priority (1 is highest priority)
-        // return images[a].priority - images[b].priority;
       });
 
       sortedImageIds.forEach((img) => {
@@ -334,9 +316,12 @@ function updateImageFromScreenWidth(width) {
       return;
     }
     const images = sections[currSectionId].images;
+    const sortedImageIds = Object.keys(images).sort((a, b) => {
+      return images[a].width - images[b].width;
+    });
     let image = null;
     let matchFound = false;
-    Object.keys(images).forEach((key) => {
+    sortedImageIds.forEach((key) => {
       if (images[key].width === width) {
         image = images[key];
         matchFound = true;
@@ -350,7 +335,7 @@ function updateImageFromScreenWidth(width) {
     if (image && matchFound) {
       sections[currSectionId].currImageId = image.id;
       chrome.storage.local.set({ sections });
-      // updateImageList();
+      updateSectionImageList(currSectionId);
     }
   });
 }
@@ -361,7 +346,6 @@ function updateImageOverlay(sectionId, image) {
     sections[sectionId].currImageId = image.id;
     chrome.storage.local.set({ sections }, function () {
       updateSectionImageList(sectionId);
-      // showSectionUploadResult(sectionId, 'Image selected successfully!');
     });
   });
 }
@@ -382,21 +366,20 @@ function deleteSectionImage(sectionId, imageId) {
   });
 }
 
-// function updateSectionImagePriority(sectionId, imageId, newPriority) {
-//   chrome.storage.local.get(['sections'], function (result) {
-//     const { sections } = result;
-//     sections[sectionId].images[imageId].priority = newPriority;
-//     chrome.storage.local.set({ sections }, function () {
-//       showSectionUploadResult(
-//         sectionId,
-//         `Image priority updated to ${newPriority}!`
-//       );
-//       updateSectionImageList(sectionId);
-//     });
-//   });
-// }
+function updateSectionImagePriority(sectionId, imageId, newPriority) {
+  chrome.storage.local.get(['sections'], function (result) {
+    const { sections } = result;
+    sections[sectionId].images[imageId].priority = newPriority;
+    chrome.storage.local.set({ sections }, function () {
+      showSectionUploadResult(
+        sectionId,
+        `Image priority updated to ${newPriority}!`
+      );
+      updateSectionImageList(sectionId);
+    });
+  });
+}
 
-// Message updates to user
 function showSectionUploadResult(sectionId, message) {
   const uploadResult = document.querySelector(
     `[data-section-id="${sectionId}"] .upload-result`
@@ -412,7 +395,6 @@ function clearSectionImages(sectionId) {
     const { sections } = result;
     sections[sectionId].images = {};
     chrome.storage.local.set({ sections }, function () {
-      // showSectionUploadResult(sectionId, 'All images cleared successfully!');
       updateSectionImageList(sectionId);
     });
   });
