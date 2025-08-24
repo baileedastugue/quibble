@@ -18,7 +18,7 @@
 }
 
 #quibble-image-overlay img.focused {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+  box-shadow: 0 0 20px rgba(7, 121, 228, 0.6);
   cursor: move;
 }
 
